@@ -1,0 +1,72 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: ts-rotgui
+  version: {{ data.get('version') }}
+
+source:
+  path: ../
+
+build:
+  script_env:
+    - QT_API=PySide6
+    - PYTEST_QT_API=PySide6
+  noarch: python
+  script: {{ PYTHON }} -m pip install --no-deps --ignore-installed .
+  entry_points:
+    - run_rotgui = lsst.ts.rotgui.application:run_application
+
+test:
+  requires:
+    - {{ cdt('mesa-libgl-devel') }}  # [linux]
+    - {{ cdt('mesa-dri-drivers') }}  # [linux]
+    - {{ cdt('libselinux') }}  # [linux]
+    - {{ cdt('libxdamage') }}  # [linux]
+    - {{ cdt('libxxf86vm') }}  # [linux]
+    - {{ cdt('libxext') }}     # [linux]
+    - {{ cdt('xorg-x11-server-Xvfb')}}  # [linux]
+    - ts-conda-build =0.4
+    - pyside6
+    - qt6-charts
+    - pytest-qt
+    - pytest-xvfb
+    - ts-xml
+    - ts-guitool
+  source_files:
+    - python
+    - bin
+    - tests
+    - pyproject.toml
+  commands:
+    - pytest
+
+requirements:
+  host:
+    - python {{ python }}
+    - pip
+    - setuptools_scm
+    - setuptools
+    - pytest-runner
+    - xorg-libxfixes # [linux]
+    - xcb-util-cursor # [linux]
+  build:
+    - {{ cdt('mesa-libgl-devel') }}  # [linux]
+    - {{ cdt('mesa-dri-drivers') }}  # [linux]
+    - {{ cdt('libselinux') }}  # [linux]
+    - {{ cdt('libxdamage') }}  # [linux]
+    - {{ cdt('libxxf86vm') }}  # [linux]
+    - {{ cdt('libxext') }}     # [linux]
+    - python {{ python }}
+    - setuptools_scm
+    - setuptools
+    - ts-conda-build =0.4
+  run:
+    - python {{ python }}
+    - setuptools
+    - setuptools_scm
+    - pandas
+    - pyside6
+    - qt6-charts
+    - qasync
+    - ts-xml
+    - ts-guitool
