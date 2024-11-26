@@ -34,7 +34,7 @@ from qasync import QApplication, asyncSlot
 
 from .control_panel import ControlPanel
 from .model import Model
-from .tab import TabDriveStatus, TabPosition, TabSettings, TabTelemetry
+from .tab import TabDriveStatus, TabPosition, TabPower, TabSettings, TabTelemetry
 
 
 class MainWindow(QMainWindow):
@@ -93,6 +93,7 @@ class MainWindow(QMainWindow):
             TabTelemetry("Telemetry", self.model),
             TabDriveStatus("Drive Status (Axis A+B)", self.model),
             TabPosition("Position", self.model),
+            TabPower("Power", self.model),
         ]
         self._control_tabs = ControlTabs(tabs)
 

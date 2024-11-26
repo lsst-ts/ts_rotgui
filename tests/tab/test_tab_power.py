@@ -19,8 +19,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .tab_drive_status import *
-from .tab_position import *
-from .tab_power import *
-from .tab_settings import *
-from .tab_telemetry import *
+import logging
+
+import pytest
+from lsst.ts.rotgui import Model
+from lsst.ts.rotgui.tab import TabPower
+from pytestqt.qtbot import QtBot
+
+
+@pytest.fixture
+def widget(qtbot: QtBot) -> TabPower:
+    widget = TabPower("Power", Model(logging.getLogger()))
+    qtbot.addWidget(widget)
+
+    return widget
+
+
+@pytest.mark.asyncio
+async def test_callback_time_out(widget: TabPower) -> None:
+
+    widget._currents = [1.0, 2.0]
+    widget._voltage = 3.0
+
+    await widget._callback_time_out()
+
+    assert widget._figures["current"].get_points(0)[-1].y() == 1.0
+    assert widget._figures["current"].get_points(1)[-1].y() == 2.0
+
+    assert widget._figures["voltage"].get_points(0)[-1].y() == 3.0
