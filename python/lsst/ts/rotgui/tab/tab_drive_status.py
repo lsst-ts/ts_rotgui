@@ -21,9 +21,14 @@
 
 __all__ = ["TabDriveStatus"]
 
-from lsst.ts.guitool import TabTemplate, create_group_box
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPalette
+from lsst.ts.guitool import (
+    ButtonStatus,
+    TabTemplate,
+    create_group_box,
+    create_radio_indicators,
+    update_button_color,
+)
+from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -60,57 +65,31 @@ class TabDriveStatus(TabTemplate):
 
         # 16 bits
         self._list_status_word = {
-            "axis_a": self._create_radio_indicators(16),
-            "axis_b": self._create_radio_indicators(16),
+            "axis_a": create_radio_indicators(16),
+            "axis_b": create_radio_indicators(16),
         }
 
         # 16 bits
         self._list_latching_fault_status = {
-            "axis_a": self._create_radio_indicators(16),
-            "axis_b": self._create_radio_indicators(16),
+            "axis_a": create_radio_indicators(16),
+            "axis_b": create_radio_indicators(16),
         }
 
         # 32 bits
         self._list_copley_status = {
-            "axis_a": self._create_radio_indicators(32),
-            "axis_b": self._create_radio_indicators(32),
+            "axis_a": create_radio_indicators(32),
+            "axis_b": create_radio_indicators(32),
         }
 
         # Only 3 bits are used
         self._list_input_pin_state = {
-            "axis_a": self._create_radio_indicators(3),
-            "axis_b": self._create_radio_indicators(3),
+            "axis_a": create_radio_indicators(3),
+            "axis_b": create_radio_indicators(3),
         }
-
-        # 11 Simulink flags
-        self._list_simulink_flag = self._create_radio_indicators(11)
 
         self._set_default_indicators()
 
         self.set_widget_and_layout(is_scrollable=True)
-
-    def _create_radio_indicators(self, number: int) -> list[QRadioButton]:
-        """Create the radio button indicators.
-
-        Parameters
-        ----------
-        number : `int`
-            Number of the radio button indicator.
-
-        Returns
-        -------
-        indicators : `list` [`QRadioButton`]
-            Radio button indicators.
-        """
-
-        indicators = list()
-        for _ in range(number):
-            indicator = QRadioButton()
-            indicator.setEnabled(False)
-
-            indicators.append(indicator)
-
-        return indicators
 
     def _set_default_indicators(self) -> None:
         """Set the default indicators."""
@@ -123,36 +102,7 @@ class TabDriveStatus(TabTemplate):
         ]:
             for indicators in item.values():
                 for indicator in indicators:
-                    self._update_boolean_indicator_color(
-                        indicator, Qt.red, Qt.gray, False
-                    )
-
-        for indicator in self._list_simulink_flag:
-            self._update_boolean_indicator_color(indicator, Qt.red, Qt.gray, False)
-
-    def _update_boolean_indicator_color(
-        self, indicator: QRadioButton, color_on: QColor, color_off: QColor, is_on: bool
-    ) -> None:
-        """Update the boolean indicator color.
-
-        Parameters
-        ----------
-        indicator : `QRadioButton`
-            Indicator.
-        color_on : `QColor`
-            Color when it is on.
-        color_off : `QColor`
-            Color when it is off.
-        is_on : `bool`
-            Is on or off.
-        """
-
-        palette = indicator.palette()
-
-        color = color_on if is_on else color_off
-        palette.setColor(QPalette.Base, color)
-
-        indicator.setPalette(palette)
+                    update_button_color(indicator, QPalette.Base, ButtonStatus.Default)
 
     def create_layout(self) -> QVBoxLayout:
 
@@ -164,16 +114,11 @@ class TabDriveStatus(TabTemplate):
         # Second column
         layout_copley = QVBoxLayout()
         layout_copley.addWidget(self._create_group_copley_status())
-
-        # Third column
-        layout_misc = QVBoxLayout()
-        layout_misc.addWidget(self._create_group_input_pin_state())
-        layout_misc.addWidget(self._create_group_simulink_flag())
+        layout_copley.addWidget(self._create_group_input_pin_state())
 
         layout = QHBoxLayout()
         layout.addLayout(layout_drive)
         layout.addLayout(layout_copley)
-        layout.addLayout(layout_misc)
 
         return layout
 
@@ -289,10 +234,10 @@ class TabDriveStatus(TabTemplate):
             "Bit 7 - Feedback fault:",
             "Bit 8 - Phasing error:",
             "Bit 9 - Tracking error:",
-            "Bit 10 - Over Current:",
-            "Bit 11 - FPGA failure:",
+            "Bit 10 - Over current:",
+            "Bit 11 - FPGA failure 1:",
             "Bit 12 - Command input lost:",
-            "Bit 13 - FPGA failure:",
+            "Bit 13 - FPGA failure 2:",
             "Bit 14 - Safety circuit fault:",
             "Bit 15 - Unable to control current:",
         ]
@@ -390,30 +335,4 @@ class TabDriveStatus(TabTemplate):
                     ]
                 ),
             ),
-        )
-
-    def _create_group_simulink_flag(self) -> QGroupBox:
-        """Create the group box for the Simulink flag.
-
-        Returns
-        -------
-        `QGroupBox`
-            Group box for the Simulink flag.
-        """
-
-        names = [
-            "Initialization complete:",
-            "Slew complete:",
-            "Pt2Pt move complete:",
-            "New Pt2Pt command:",
-            "Stop complete:",
-            "Following error:",
-            "Move success:",
-            "Tracking success:",
-            "Position feedback fault:",
-            "Tracking lost:",
-            "No new track command error:",
-        ]
-        return create_group_box(
-            "Simulink Flag", self._create_form_layout(names, self._list_simulink_flag)
         )

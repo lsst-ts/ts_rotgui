@@ -24,8 +24,6 @@ import logging
 import pytest
 from lsst.ts.rotgui import Model
 from lsst.ts.rotgui.tab import TabDriveStatus
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
 
 
@@ -43,20 +41,3 @@ def test_init(widget: TabDriveStatus) -> None:
     assert len(widget._list_latching_fault_status["axis_a"]) == 16
     assert len(widget._list_copley_status["axis_a"]) == 32
     assert len(widget._list_input_pin_state["axis_a"]) == 3
-
-    assert len(widget._list_simulink_flag) == 11
-
-
-def test_update_boolean_indicator_color(widget: TabDriveStatus) -> None:
-
-    indicator = widget._list_simulink_flag[0]
-
-    # On
-    widget._update_boolean_indicator_color(indicator, Qt.green, Qt.red, True)
-
-    assert indicator.palette().color(QPalette.Base) == Qt.green
-
-    # Off
-    widget._update_boolean_indicator_color(indicator, Qt.green, Qt.red, False)
-
-    assert indicator.palette().color(QPalette.Base) == Qt.red
