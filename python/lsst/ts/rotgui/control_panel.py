@@ -21,13 +21,18 @@
 
 __all__ = ["ControlPanel"]
 
-from lsst.ts.guitool import create_group_box, create_label, set_button
+from lsst.ts.guitool import (
+    ButtonStatus,
+    create_double_spin_box,
+    create_group_box,
+    create_label,
+    set_button,
+    update_button_color,
+)
 from lsst.ts.xml.enums import MTRotator
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QComboBox,
-    QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -115,20 +120,25 @@ class ControlPanel(QWidget):
         for substate in TriggerEnabledSubState:
             enabled_substate.addItem(substate.name)
 
-        position = QDoubleSpinBox()
-        position.setDecimals(decimal_position)
-        position.setRange(-MAX_ROTATION, MAX_ROTATION)
-        position.setSuffix(" deg")
-        position.setSingleStep(10**-decimal_position)
+        position = create_double_spin_box(
+            "deg",
+            decimal_position,
+            maximum=MAX_ROTATION,
+            minimum=-MAX_ROTATION,
+        )
 
-        velocity = QDoubleSpinBox()
-        velocity.setDecimals(decimal_velocity)
-        velocity.setRange(-MAX_VELOCITY, MAX_VELOCITY)
-        velocity.setSuffix(" deg/sec")
-        velocity.setSingleStep(10**-decimal_velocity)
+        velocity = create_double_spin_box(
+            "deg/sec",
+            decimal_velocity,
+            maximum=MAX_VELOCITY,
+            minimum=-MAX_VELOCITY,
+        )
 
-        duration = QDoubleSpinBox()
-        duration.setSuffix(" sec")
+        duration = create_double_spin_box("sec", 1)
+
+        command_source = QComboBox()
+        for source in CommandSource:
+            command_source.addItem(source.name)
 
         return {
             "state": state,
@@ -136,6 +146,7 @@ class ControlPanel(QWidget):
             "position": position,
             "velocity": velocity,
             "duration": duration,
+            "source": command_source,
         }
 
     def _create_commands(self) -> dict:
@@ -150,10 +161,18 @@ class ControlPanel(QWidget):
 
         command_state = QRadioButton("State command", parent=self)
         command_enabled_substate = QRadioButton(
-            "Enabled Sub-State command", parent=self
+            "Enabled sub-state command", parent=self
         )
         command_position = QRadioButton("Position set command", parent=self)
         command_velocity = QRadioButton("Velocity set command", parent=self)
+        command_commander = QRadioButton("Switch command source", parent=self)
+        command_mask = QRadioButton("Mask limit switch", parent=self)
+        command_disable_upper = QRadioButton(
+            "Disable upper position limit", parent=self
+        )
+        command_disable_lower = QRadioButton(
+            "Disable lower position limit", parent=self
+        )
 
         command_state.setToolTip("Transition the state.")
         command_enabled_substate.setToolTip("Transition the enabled sub-state.")
@@ -161,17 +180,29 @@ class ControlPanel(QWidget):
         command_velocity.setToolTip(
             "Set the velocity used in the constant velocity movement."
         )
+        command_commander.setToolTip("Switch the command source (GUI or CSC).")
+        command_mask.setToolTip("Temporarily mask the limit switches.")
+        command_disable_upper.setToolTip("Disable the upper position limit.")
+        command_disable_lower.setToolTip("Disable the lower position limit.")
 
         command_state.toggled.connect(self._callback_command)
         command_enabled_substate.toggled.connect(self._callback_command)
         command_position.toggled.connect(self._callback_command)
         command_velocity.toggled.connect(self._callback_command)
+        command_commander.toggled.connect(self._callback_command)
+        command_mask.toggled.connect(self._callback_command)
+        command_disable_upper.toggled.connect(self._callback_command)
+        command_disable_lower.toggled.connect(self._callback_command)
 
         return {
             "state": command_state,
             "enabled_substate": command_enabled_substate,
             "position": command_position,
             "velocity": command_velocity,
+            "commander": command_commander,
+            "mask": command_mask,
+            "disable_upper": command_disable_upper,
+            "disable_lower": command_disable_lower,
         }
 
     @asyncSlot()
@@ -189,6 +220,18 @@ class ControlPanel(QWidget):
 
         elif self._commands["velocity"].isChecked():
             self._enable_command_parameters(["velocity", "duration"])
+
+        elif self._commands["commander"].isChecked():
+            self._enable_command_parameters(["source"])
+
+        elif self._commands["mask"].isChecked():
+            self._enable_command_parameters([])
+
+        elif self._commands["disable_upper"].isChecked():
+            self._enable_command_parameters([])
+
+        elif self._commands["disable_lower"].isChecked():
+            self._enable_command_parameters([])
 
     def _enable_command_parameters(self, enabled_parameters: list[str]) -> None:
         """Enable the command parameters.
@@ -218,18 +261,6 @@ class ControlPanel(QWidget):
             tool_tip="Send the command to the controller.",
         )
 
-        switch_commander = set_button(
-            "Switch Command Source",
-            self._callback_switch_commander,
-            tool_tip="Switch the command source (GUI or CSC).",
-        )
-
-        mask_limit_switch = set_button(
-            "Mask Limit Switch",
-            self._callback_mask_limit_switch,
-            tool_tip="Temporarily mask the limit switches.",
-        )
-
         log_telemetry = set_button(
             "Log Telemetry",
             self._callback_log_telemetry,
@@ -239,8 +270,6 @@ class ControlPanel(QWidget):
 
         return {
             "send_command": send_command,
-            "switch_commander": switch_commander,
-            "mask_limit_switch": mask_limit_switch,
             "log_telemetry": log_telemetry,
         }
 
@@ -249,19 +278,6 @@ class ControlPanel(QWidget):
         """Callback of the send-command button to command the controller."""
 
         self.model.log.info("Send the command.")
-
-    @asyncSlot()
-    async def _callback_switch_commander(self) -> None:
-        """Callback of the switch-commander button to switch the commander."""
-
-        self.model.log.info("Switch the command source.")
-
-    @asyncSlot()
-    async def _callback_mask_limit_switch(self) -> None:
-        """Callback of the mask-limit-switch button to mask the limit
-        switches."""
-
-        self.model.log.info("Mask the limit switches.")
 
     @asyncSlot()
     async def _callback_log_telemetry(self) -> None:
@@ -369,13 +385,14 @@ class ControlPanel(QWidget):
         """
 
         layout_parameters = QFormLayout()
-        layout_parameters.addRow("State Trigger", self._command_parameters["state"])
+        layout_parameters.addRow("State trigger", self._command_parameters["state"])
         layout_parameters.addRow(
-            "Enabled Sub-State Trigger", self._command_parameters["enabled_substate"]
+            "Enabled sub-state trigger", self._command_parameters["enabled_substate"]
         )
         layout_parameters.addRow("Position", self._command_parameters["position"])
         layout_parameters.addRow("Velocity", self._command_parameters["velocity"])
         layout_parameters.addRow("Duration", self._command_parameters["duration"])
+        layout_parameters.addRow("Command source", self._command_parameters["source"])
 
         layout = QVBoxLayout()
         layout.addLayout(layout_parameters)
@@ -392,11 +409,9 @@ class ControlPanel(QWidget):
         """
 
         layout = QVBoxLayout()
-        layout.addWidget(self._buttons["switch_commander"])
-        layout.addWidget(self._buttons["mask_limit_switch"])
         layout.addWidget(self._buttons["log_telemetry"])
 
-        return create_group_box("Special Commands", layout)
+        return create_group_box("Special Command", layout)
 
     def _set_default(self) -> None:
         """Set the default values."""
@@ -430,9 +445,5 @@ class ControlPanel(QWidget):
         self._indicator_fault.setText(text)
 
         # Set the color
-        palette = self._indicator_fault.palette()
-
-        color = Qt.red if is_fault else Qt.green
-        palette.setColor(QPalette.Button, color)
-
-        self._indicator_fault.setPalette(palette)
+        status = ButtonStatus.Error if is_fault else ButtonStatus.Normal
+        update_button_color(self._indicator_fault, QPalette.Button, status)

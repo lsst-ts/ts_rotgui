@@ -56,7 +56,7 @@ class Model(object):
         self.log = log
         self._is_simulation_mode = is_simulation_mode
 
-        # TODO: Put this into the ts_config_mttcs in DM-47568.
+        # TODO: Put this into the ts_config_mttcs in DM-47843.
         self.connection_information = {
             "host": "localhost",
             "port": 1000,

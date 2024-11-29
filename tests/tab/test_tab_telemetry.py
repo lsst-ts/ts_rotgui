@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # This file is part of ts_rotgui.
 #
 # Developed for the Vera Rubin Observatory Systems.
@@ -17,7 +16,26 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.rotgui import run_application
+import logging
 
-run_application()
+import pytest
+from lsst.ts.rotgui import Model
+from lsst.ts.rotgui.tab import TabTelemetry
+from pytestqt.qtbot import QtBot
+
+
+@pytest.fixture
+def widget(qtbot: QtBot) -> TabTelemetry:
+    widget = TabTelemetry("Telemetry", Model(logging.getLogger()))
+    qtbot.addWidget(widget)
+
+    return widget
+
+
+def test_init(widget: TabTelemetry) -> None:
+
+    assert len(widget._indicators["application_status"]) == 16
+    assert len(widget._indicators["simulink_flag"]) == 11

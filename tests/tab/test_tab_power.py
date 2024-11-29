@@ -23,21 +23,27 @@ import logging
 
 import pytest
 from lsst.ts.rotgui import Model
-from lsst.ts.rotgui.tab import TabDriveStatus
+from lsst.ts.rotgui.tab import TabPower
 from pytestqt.qtbot import QtBot
 
 
 @pytest.fixture
-def widget(qtbot: QtBot) -> TabDriveStatus:
-    widget = TabDriveStatus("Drive Status (Axis A+B)", Model(logging.getLogger()))
+def widget(qtbot: QtBot) -> TabPower:
+    widget = TabPower("Power", Model(logging.getLogger()))
     qtbot.addWidget(widget)
 
     return widget
 
 
-def test_init(widget: TabDriveStatus) -> None:
+@pytest.mark.asyncio
+async def test_callback_time_out(widget: TabPower) -> None:
 
-    assert len(widget._list_status_word["axis_a"]) == 16
-    assert len(widget._list_latching_fault_status["axis_a"]) == 16
-    assert len(widget._list_copley_status["axis_a"]) == 32
-    assert len(widget._list_input_pin_state["axis_a"]) == 3
+    widget._currents = [1.0, 2.0]
+    widget._voltage = 3.0
+
+    await widget._callback_time_out()
+
+    assert widget._figures["current"].get_points(0)[-1].y() == 1.0
+    assert widget._figures["current"].get_points(1)[-1].y() == 2.0
+
+    assert widget._figures["voltage"].get_points(0)[-1].y() == 3.0

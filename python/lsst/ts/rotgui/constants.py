@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["MAX_ROTATION", "MAX_VELOCITY"]
+__all__ = ["MAX_ROTATION", "MAX_VELOCITY", "NUM_STRUT"]
 
 
 # In degree
@@ -27,3 +27,6 @@ MAX_ROTATION = 90.0
 
 # In degree/second
 MAX_VELOCITY = 3.5
+
+# Number of the struts
+NUM_STRUT = 2

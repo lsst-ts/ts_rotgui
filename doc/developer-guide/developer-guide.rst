@@ -45,6 +45,7 @@ rotgui.tab
 * **TabPosition** shows the rotator position and velocity.
 * **TabSettings** shows the settings of GUI.
 * **TabTelemetry** shows the telemetry of controller.
+* **TabPower** shows the power status.
 
 The class diagrams for each table class are listed below to give you the idea of class relationship.
 
@@ -79,6 +80,14 @@ rotgui.tab.Telemetry
 
 .. mermaid:: ../uml/tab/class_tab_telemetry.mmd
     :caption: Class diagram of TabTelemetry class
+
+.. _lsst.ts.rotgui-modules_rotgui_tab_power:
+
+rotgui.tab.Power
+--------------------
+
+.. mermaid:: ../uml/tab/class_tab_power.mmd
+    :caption: Class diagram of TabPower class
 
 .. _API:
 

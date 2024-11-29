@@ -21,5 +21,6 @@
 
 from .tab_drive_status import *
 from .tab_position import *
+from .tab_power import *
 from .tab_settings import *
 from .tab_telemetry import *
