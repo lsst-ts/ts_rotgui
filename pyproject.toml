@@ -26,7 +26,7 @@ version = { attr = "setuptools_scm.get_version" }
 where = [ "python" ]
 
 [project.scripts]
-run_rotgui = "lsst.ts.rotgui.application:run_application"
+run_rotgui = "lsst.ts.rotgui:run_rotgui"
 
 [tool.setuptools_scm]
 write_to = "python/lsst/ts/rotgui/version.py"

@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["run_application"]
+__all__ = ["run_rotgui"]
 
 import asyncio
 import functools
@@ -31,8 +31,8 @@ from PySide6.QtCore import QCommandLineOption, QCommandLineParser
 from .main_window import MainWindow
 
 
-def run_application() -> None:
-    """Run the application."""
+def run_rotgui() -> None:
+    """Run the rotator GUI."""
     base_frame_run_application(main)
 
 
@@ -54,7 +54,7 @@ async def main(argv: list) -> bool:
     app = qasync.QApplication.instance()
     if hasattr(app, "aboutToQuit"):
         getattr(app, "aboutToQuit").connect(
-            functools.partial(close_future, future, loop)
+            functools.partial(cancel_future, future, loop)
         )
 
     app.setApplicationName("Rotator EUI")
@@ -114,8 +114,8 @@ async def main(argv: list) -> bool:
     return True
 
 
-def close_future(future: asyncio.Future, loop: asyncio.AbstractEventLoop) -> None:
-    """Close the future.
+def cancel_future(future: asyncio.Future, loop: asyncio.AbstractEventLoop) -> None:
+    """Cancel the future.
 
     This is needed to ensure that all pre- and post-processing for the event
     loop is done. See the source code in qasync library for the details.
@@ -129,4 +129,5 @@ def close_future(future: asyncio.Future, loop: asyncio.AbstractEventLoop) -> Non
     """
 
     loop.call_later(10, future.cancel)
-    future.cancel()
+    if not future.cancelled():
+        future.cancel()
