@@ -6,6 +6,16 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.3.0:
+
+-------------
+0.3.0
+-------------
+
+* Rename ``run_application()`` to ``run_gui()``.
+* Read the configuration file in **ts_config_mttcs**.
+* Add the **signals.py**, **config.py**, and **status.py**.
+
 .. _lsst.ts.rotgui-0.2.0:
 
 -------------

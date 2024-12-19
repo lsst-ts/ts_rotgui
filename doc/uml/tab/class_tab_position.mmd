@@ -6,8 +6,12 @@ namespace guitool {
 
 namespace rotgui {
   class Model
+  class SignalPositionVelocity
 }
+
+Model *-- SignalPositionVelocity : emit()
 
 TabTemplate <|-- TabPosition
 
 TabPosition *-- Model
+TabPosition --> SignalPositionVelocity : connect()
