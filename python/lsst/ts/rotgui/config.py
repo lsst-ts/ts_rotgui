@@ -19,23 +19,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import typing
+__all__ = ["Config"]
 
-if typing.TYPE_CHECKING:
-    __version__ = "?"
-else:
-    try:
-        from .version import *
-    except ImportError:
-        __version__ = "?"
+from dataclasses import dataclass
 
-from .application import *
-from .config import *
-from .constants import *
-from .control_panel import *
-from .enums import *
-from .main_window import *
-from .model import *
-from .signals import *
-from .status import *
-from .tab import *
+
+@dataclass
+class Config:
+    """Configuration class to have the configuration details."""
+
+    # In deg/sec
+    velocity_limit: float = 0.0
+
+    # In deg/sec^2
+    acceleration_limit: float = 0.0
+
+    # In deg
+    position_error_threshold: float = 0.0
+
+    # In deg
+    upper_position_limit: float = 0.0
+    lower_position_limit: float = 0.0
+
+    # In deg
+    following_error_threshold: float = 0.0
+    track_success_position_threshold: float = 0.0
+
+    # In sec
+    tracking_lost_timeout: float = 0.0
+
+    # In deg/sec^3
+    emergency_jerk_limit: float = 0.0
+
+    # In deg/sec^2
+    emergency_acceleration_limit: float = 0.0
+
+    # In sec
+    disable_limit_max_time: float = 0.0
+
+    # In deg/sec
+    max_velocity_limit: float = 0.0
+
+    drives_enabled: bool = False

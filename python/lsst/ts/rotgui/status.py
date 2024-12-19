@@ -19,23 +19,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import typing
+__all__ = ["Status"]
 
-if typing.TYPE_CHECKING:
-    __version__ = "?"
-else:
-    try:
-        from .version import *
-    except ImportError:
-        __version__ = "?"
+from dataclasses import dataclass, field
 
-from .application import *
-from .config import *
-from .constants import *
-from .control_panel import *
-from .enums import *
-from .main_window import *
-from .model import *
-from .signals import *
-from .status import *
-from .tab import *
+from .constants import NUM_STRUT
+
+
+@dataclass
+class Status:
+    """System status."""
+
+    # Command source (enum `CommandSource`)
+    command_source: int = 0
+
+    # State (enum `lsst.ts.xml.enums.MTRotator.ControllerState`)
+    state: int = 0
+
+    # Enabled substate (enum `lsst.ts.xml.enums.MTRotator.EnabledSubstate`)
+    substate_enabled: int = 0
+
+    # Fault substate (enum `lsst.ts.xml.enums.MTRotator.FaultSubstate`)
+    substate_fault: int = 0
+
+    # Flag
+    application_status: int = 0
+    simulink_flag: int = 0
+
+    # Drive
+    status_word: list[int] = field(default_factory=lambda: [0] * NUM_STRUT)
+    latching_fault: list[int] = field(default_factory=lambda: [0] * NUM_STRUT)
+    copley_status: list[int] = field(default_factory=lambda: [0] * NUM_STRUT)
+    input_pin: list[int] = field(default_factory=lambda: [0] * NUM_STRUT)
