@@ -26,6 +26,7 @@ from PySide6.QtWidgets import QVBoxLayout
 from qasync import asyncSlot
 
 from ..model import Model
+from ..signals import SignalPositionVelocity
 
 
 class TabPosition(TabTemplate):
@@ -66,6 +67,8 @@ class TabPosition(TabTemplate):
         )
 
         self.set_widget_and_layout()
+
+        self._set_signal_position_velocity(self.model.signals["position_velocity"])  # type: ignore[arg-type]
 
     def _create_figures(self, num_realtime: int = 200) -> dict:
         """Create the figures to show the position and velocity.
@@ -119,3 +122,39 @@ class TabPosition(TabTemplate):
             layout.addWidget(figure)
 
         return layout
+
+    def _set_signal_position_velocity(self, signal: SignalPositionVelocity) -> None:
+        """Set the position-velocity signal.
+
+        Parameters
+        ----------
+        signal : `SignalPositionVelocity`
+            Signal.
+        """
+
+        signal.position_current.connect(self._callback_position_current)
+        signal.velocity.connect(self._callback_velocity)
+
+    @asyncSlot()
+    async def _callback_position_current(self, position: float) -> None:
+        """Callback of the current position.
+
+        Parameters
+        ----------
+        position : `float`
+            Position in deg.
+        """
+
+        self._position = position
+
+    @asyncSlot()
+    async def _callback_velocity(self, velocity: float) -> None:
+        """Callback of the velocity.
+
+        Parameters
+        ----------
+        velocity : `float`
+            Velocity in deg/sec.
+        """
+
+        self._velocity = velocity
