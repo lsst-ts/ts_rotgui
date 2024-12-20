@@ -45,6 +45,7 @@ from qasync import asyncSlot
 from .constants import MAX_ROTATION, MAX_VELOCITY
 from .enums import CommandSource, TriggerEnabledSubState, TriggerState
 from .model import Model
+from .signals import SignalPositionVelocity, SignalState
 
 
 class ControlPanel(QWidget):
@@ -89,6 +90,9 @@ class ControlPanel(QWidget):
         self._buttons = self._create_buttons()
 
         self.setLayout(self._create_layout())
+
+        self._set_signal_state(self.model.signals["state"])  # type: ignore[arg-type]
+        self._set_signal_position_velocity(self.model.signals["position_velocity"])  # type: ignore[arg-type]
 
         self._set_default()
 
@@ -385,14 +389,14 @@ class ControlPanel(QWidget):
         """
 
         layout_parameters = QFormLayout()
-        layout_parameters.addRow("State trigger", self._command_parameters["state"])
+        layout_parameters.addRow("State trigger:", self._command_parameters["state"])
         layout_parameters.addRow(
-            "Enabled sub-state trigger", self._command_parameters["enabled_substate"]
+            "Enabled sub-state trigger:", self._command_parameters["enabled_substate"]
         )
-        layout_parameters.addRow("Position", self._command_parameters["position"])
-        layout_parameters.addRow("Velocity", self._command_parameters["velocity"])
-        layout_parameters.addRow("Duration", self._command_parameters["duration"])
-        layout_parameters.addRow("Command source", self._command_parameters["source"])
+        layout_parameters.addRow("Position:", self._command_parameters["position"])
+        layout_parameters.addRow("Velocity:", self._command_parameters["velocity"])
+        layout_parameters.addRow("Duration:", self._command_parameters["duration"])
+        layout_parameters.addRow("Command source:", self._command_parameters["source"])
 
         layout = QVBoxLayout()
         layout.addLayout(layout_parameters)
@@ -413,23 +417,46 @@ class ControlPanel(QWidget):
 
         return create_group_box("Special Command", layout)
 
-    def _set_default(self) -> None:
-        """Set the default values."""
+    def _set_signal_state(self, signal: SignalState) -> None:
+        """Set the state signal.
 
-        self._update_fault_status(False)
+        Parameters
+        ----------
+        signal : `SignalState`
+            Signal.
+        """
 
-        self._labels["source"].setText(CommandSource.GUI.name)
+        signal.command_source.connect(self._callback_command_source)
+        signal.state.connect(self._callback_state)
+        signal.substate_enabled.connect(self._callback_substate_enabled)
+        signal.substate_fault.connect(self._callback_substate_fault)
 
-        self._labels["state"].setText(MTRotator.ControllerState.STANDBY.name)
-        self._labels["enabled_substate"].setText(
-            MTRotator.EnabledSubstate.STATIONARY.name
-        )
-        self._labels["fault_substate"].setText(MTRotator.FaultSubstate.NO_ERROR.name)
+    @asyncSlot()
+    async def _callback_command_source(self, source: int) -> None:
+        """Callback of the controller's command source signal.
 
-        self._labels["odometer"].setText("0")
-        self._labels["position"].setText("0")
+        Parameters
+        ----------
+        source : `int`
+            Source.
+        """
 
-        self._commands["state"].setChecked(True)
+        self._labels["source"].setText(CommandSource(source).name)
+
+    @asyncSlot()
+    async def _callback_state(self, state: int) -> None:
+        """Callback of the controller's state signal.
+
+        Parameters
+        ----------
+        state : `int`
+            State.
+        """
+
+        controller_state = MTRotator.ControllerState(state)
+        self._labels["state"].setText(controller_state.name)
+
+        self._update_fault_status(controller_state == MTRotator.ControllerState.FAULT)
 
     def _update_fault_status(self, is_fault: bool) -> None:
         """Update the fault status.
@@ -447,3 +474,70 @@ class ControlPanel(QWidget):
         # Set the color
         status = ButtonStatus.Error if is_fault else ButtonStatus.Normal
         update_button_color(self._indicator_fault, QPalette.Button, status)
+
+    @asyncSlot()
+    async def _callback_substate_enabled(self, substate: int) -> None:
+        """Callback of the controller's enabled substate signal.
+
+        Parameters
+        ----------
+        substate : `int`
+            Substate.
+        """
+
+        self._labels["enabled_substate"].setText(
+            MTRotator.EnabledSubstate(substate).name
+        )
+
+    @asyncSlot()
+    async def _callback_substate_fault(self, substate: int) -> None:
+        """Callback of the controller's fault substate signal.
+
+        Parameters
+        ----------
+        substate : `int`
+            Substate.
+        """
+
+        self._labels["fault_substate"].setText(MTRotator.FaultSubstate(substate).name)
+
+    def _set_signal_position_velocity(self, signal: SignalPositionVelocity) -> None:
+        """Set the position-velocity signal.
+
+        Parameters
+        ----------
+        signal : `SignalPositionVelocity`
+            Signal.
+        """
+
+        signal.position_current.connect(self._callback_position_current)
+        signal.odometer.connect(self._callback_odometer)
+
+    @asyncSlot()
+    async def _callback_position_current(self, position: float) -> None:
+        """Callback of the current position.
+
+        Parameters
+        ----------
+        position : `float`
+            Position in deg.
+        """
+
+        self._labels["position"].setText(f"{position:7f}")
+
+    @asyncSlot()
+    async def _callback_odometer(self, odometer: float) -> None:
+        """Callback of the odometer.
+
+        Parameters
+        ----------
+        odometer : `float`
+            Odometer in deg.
+        """
+
+        self._labels["odometer"].setText(f"{odometer:7f}")
+
+    def _set_default(self) -> None:
+        """Set the default."""
+
+        self._commands["state"].setChecked(True)

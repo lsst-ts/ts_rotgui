@@ -22,13 +22,11 @@
 __all__ = ["TabDriveStatus"]
 
 from lsst.ts.guitool import (
-    ButtonStatus,
     TabTemplate,
     create_group_box,
     create_radio_indicators,
-    update_button_color,
+    update_boolean_indicator_status,
 )
-from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -38,8 +36,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ..model import Model
+from ..signals import SignalDrive
 
 
 class TabDriveStatus(TabTemplate):
@@ -87,22 +87,9 @@ class TabDriveStatus(TabTemplate):
             "axis_b": create_radio_indicators(3),
         }
 
-        self._set_default_indicators()
-
         self.set_widget_and_layout(is_scrollable=True)
 
-    def _set_default_indicators(self) -> None:
-        """Set the default indicators."""
-
-        for item in [
-            self._list_status_word,
-            self._list_latching_fault_status,
-            self._list_copley_status,
-            self._list_input_pin_state,
-        ]:
-            for indicators in item.values():
-                for indicator in indicators:
-                    update_button_color(indicator, QPalette.Base, ButtonStatus.Default)
+        self._set_signal_drive(self.model.signals["drive"])  # type: ignore[arg-type]
 
     def create_layout(self) -> QVBoxLayout:
 
@@ -335,4 +322,188 @@ class TabDriveStatus(TabTemplate):
                     ]
                 ),
             ),
+        )
+
+    def _set_signal_drive(self, signal: SignalDrive) -> None:
+        """Set the drive signal.
+
+        Parameters
+        ----------
+        signal : `SignalDrive`
+            Signal.
+        """
+
+        signal.status_word.connect(self._callback_status_word)
+        signal.latching_fault.connect(self._callback_latching_fault)
+        signal.copley_status.connect(self._callback_copley_status)
+        signal.input_pin.connect(self._callback_input_pin)
+
+    @asyncSlot()
+    async def _callback_status_word(self, status_word: list[int]) -> None:
+        """Callback of the status word.
+
+        Parameters
+        ----------
+        status_word : `list` [`int`]
+            Status word of [axia_a, axis_b].
+        """
+
+        self._update_status_word(status_word[0], "axis_a")
+        self._update_status_word(status_word[1], "axis_b")
+
+    def _update_status_word(self, status: int, actuator: str) -> None:
+        """Update the status word.
+
+        Parameters
+        ----------
+        status : `int`
+            Status word.
+        actuator : `str`
+            Actuator ("axis_a" or "axis_b").
+        """
+
+        faults = [3]
+        warnings = [6, 7, 8, 11]
+        self._update_boolean_indicators(
+            status,
+            self._list_status_word[actuator],
+            faults,
+            warnings,
+            [],
+        )
+
+    def _update_boolean_indicators(
+        self,
+        status: int,
+        indicators: list[QRadioButton],
+        faults: list[int],
+        warnings: list[int],
+        default_errors: list[int],
+    ) -> None:
+        """Update the boolean indicators.
+
+        Parameters
+        ----------
+        status : `int`
+            Status.
+        indicators : `list` [`QRadioButton`]
+            Indicators.
+        faults : `list` [`int`]
+            Indexes of the faults.
+        warnings : `list` [`int`]
+            Indexes of the warnings.
+        default_errors : `list` [`int`]
+            Default errors.
+        """
+
+        for idx, indicator in enumerate(indicators):
+            update_boolean_indicator_status(
+                indicator,
+                status & (1 << idx),
+                is_fault=(idx in faults),
+                is_warning=(idx in warnings),
+                is_default_error=(idx in default_errors),
+            )
+
+    @asyncSlot()
+    async def _callback_latching_fault(self, latching_fault: list[int]) -> None:
+        """Callback of the latching fault.
+
+        Parameters
+        ----------
+        latching_fault : `list` [`int`]
+            Latching fault status of [axia_a, axis_b].
+        """
+
+        self._update_latching_fault_status(latching_fault[0], "axis_a")
+        self._update_latching_fault_status(latching_fault[1], "axis_b")
+
+    def _update_latching_fault_status(self, status: int, actuator: str) -> None:
+        """Update the latching fault status.
+
+        Parameters
+        ----------
+        status : `int`
+            Status word.
+        actuator : `str`
+            Actuator ("axis_a" or "axis_b").
+        """
+
+        faults = list(range(16))
+        self._update_boolean_indicators(
+            status,
+            self._list_latching_fault_status[actuator],
+            faults,
+            [],
+            [],
+        )
+
+    @asyncSlot()
+    async def _callback_copley_status(self, copley_status: list[int]) -> None:
+        """Callback of the Copley drive status.
+
+        Parameters
+        ----------
+        copley_status : `list` [`int`]
+            Copley drive status of [axia_a, axis_b].
+        """
+
+        self._update_copley_status(copley_status[0], "axis_a")
+        self._update_copley_status(copley_status[1], "axis_b")
+
+    def _update_copley_status(self, status: int, actuator: str) -> None:
+        """Update the Copley drive status.
+
+        Parameters
+        ----------
+        status : `int`
+            Status word.
+        actuator : `str`
+            Actuator ("axis_a" or "axis_b").
+        """
+
+        faults = [0, 1, 2, 3, 4, 5, 6, 9, 10, 11, 18, 22, 28, 29, 30]
+        warnings = [7, 8, 12, 13, 14, 15, 16, 17, 19, 20, 21, 23, 24, 25]
+        self._update_boolean_indicators(
+            status,
+            self._list_copley_status[actuator],
+            faults,
+            warnings,
+            [],
+        )
+
+    @asyncSlot()
+    async def _callback_input_pin(self, input_pin: list[int]) -> None:
+        """Callback of the input pin status.
+
+        Parameters
+        ----------
+        input_pin : `list` [`int`]
+            Input pin status of [axia_a, axis_b].
+        """
+
+        self._update_input_pin_status(input_pin[0], "axis_a")
+        self._update_input_pin_status(input_pin[1], "axis_b")
+
+    def _update_input_pin_status(self, status: int, actuator: str) -> None:
+        """Update the input pin status.
+
+        Parameters
+        ----------
+        status : `int`
+            Status word.
+        actuator : `str`
+            Actuator ("axis_a" or "axis_b").
+        """
+
+        bit_offset = 5
+
+        faults = [1, 2]
+        default_errors = [0]
+        self._update_boolean_indicators(
+            status >> bit_offset,
+            self._list_input_pin_state[actuator],
+            faults,
+            [],
+            default_errors,
         )

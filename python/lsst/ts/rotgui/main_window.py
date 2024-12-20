@@ -26,7 +26,14 @@ import pathlib
 import sys
 from datetime import datetime
 
-from lsst.ts.guitool import ControlTabs, QMessageBoxAsync, get_button_action
+from lsst.ts.guitool import (
+    ControlTabs,
+    QMessageBoxAsync,
+    get_button_action,
+    get_config_dir,
+    read_yaml_file,
+)
+from lsst.ts.tcpip import LOCALHOST_IPV4
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QToolBar, QVBoxLayout, QWidget
@@ -82,10 +89,7 @@ class MainWindow(QMainWindow):
             log=log,
         )
 
-        self.model = Model(
-            self.log,
-            is_simulation_mode=is_simulation_mode,
-        )
+        self.model = self._create_model(is_simulation_mode)
         self._control_panel = ControlPanel(self.model)
 
         # Control tabs
@@ -114,6 +118,8 @@ class MainWindow(QMainWindow):
         )
 
         self._add_tool_bar()
+
+        self.model.report_default()
 
         if is_simulation_mode:
             self.log.info("Running the simulation mode.")
@@ -199,6 +205,36 @@ class MainWindow(QMainWindow):
         name = "log_%s.txt" % datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
 
         return log_dir / name
+
+    def _create_model(self, is_simulation_mode: bool, version: str = "v2") -> Model:
+        """Create the model.
+
+        Parameters
+        ----------
+        is_simulation_mode: `bool`
+            Is the simulation mode or not.
+        version: `str`, optional
+            Version of the configuration file. (the default is "v2")
+
+        Returns
+        -------
+        `Model`
+            Model object.
+        """
+
+        # Read the yaml file
+        filepath = get_config_dir(f"MTRotator/{version}") / "default_gui.yaml"
+        default_settings = read_yaml_file(filepath)
+
+        host = LOCALHOST_IPV4 if is_simulation_mode else default_settings["host"]
+
+        return Model(
+            self.log,
+            host=host,
+            port=default_settings["port"],
+            timeout_connection=default_settings["connection_timeout"],
+            is_simulation_mode=is_simulation_mode,
+        )
 
     def _create_layout(self) -> QVBoxLayout:
         """Create the layout.

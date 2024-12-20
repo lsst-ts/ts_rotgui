@@ -14,7 +14,7 @@ build:
   noarch: python
   script: {{ PYTHON }} -m pip install --no-deps --ignore-installed .
   entry_points:
-    - run_rotgui = lsst.ts.rotgui.application:run_application
+    - run_rotgui = lsst.ts.rotgui.application:run_rotgui
 
 test:
   requires:
@@ -32,6 +32,7 @@ test:
     - pytest-xvfb
     - ts-xml
     - ts-guitool
+    - ts-tcpip
   source_files:
     - python
     - bin
@@ -70,3 +71,4 @@ requirements:
     - qasync
     - ts-xml
     - ts-guitool
+    - ts-tcpip

@@ -6,8 +6,12 @@ namespace guitool {
 
 namespace rotgui {
   class Model
+  class SignalPower
 }
+
+Model *-- SignalPower : emit()
 
 TabTemplate <|-- TabPower
 
 TabPower *-- Model
+TabPower --> SignalPower : connect()

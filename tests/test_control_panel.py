@@ -23,7 +23,14 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.rotgui import MAX_ROTATION, MAX_VELOCITY, ControlPanel, Model
+from lsst.ts.rotgui import (
+    MAX_ROTATION,
+    MAX_VELOCITY,
+    CommandSource,
+    ControlPanel,
+    Model,
+)
+from lsst.ts.xml.enums import MTRotator
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
@@ -83,3 +90,37 @@ def test_update_fault_status(widget: ControlPanel) -> None:
     widget._update_fault_status(False)
     assert widget._indicator_fault.text() == "Not Faulted"
     assert widget._indicator_fault.palette().color(QPalette.Button) == Qt.green
+
+
+@pytest.mark.asyncio
+async def test_set_signal_state(widget: ControlPanel) -> None:
+
+    command_source = CommandSource.CSC
+    state = MTRotator.ControllerState.FAULT
+    enabled_substate = MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT
+    fault_substate = MTRotator.FaultSubstate.EMERGENCY_STOPPING
+
+    widget.model.report_state(command_source, state, enabled_substate, fault_substate)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._labels["source"].text() == command_source.name
+    assert widget._labels["state"].text() == state.name
+    assert widget._labels["enabled_substate"].text() == enabled_substate.name
+    assert widget._labels["fault_substate"].text() == fault_substate.name
+
+    assert widget._indicator_fault.text() == "Faulted"
+    assert widget._indicator_fault.palette().color(QPalette.Button) == Qt.red
+
+
+@pytest.mark.asyncio
+async def test_set_signal_position_velocity(widget: ControlPanel) -> None:
+
+    widget.model.report_position_velocity(10.1, 20.2, 30.3, 40.4)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._labels["position"].text() == "10.100000"
+    assert widget._labels["odometer"].text() == "30.300000"

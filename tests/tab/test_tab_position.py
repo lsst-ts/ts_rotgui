@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
 import logging
 
 import pytest
@@ -45,3 +46,15 @@ async def test_callback_time_out(widget: TabPosition) -> None:
 
     assert widget._figures["position"].get_points(0)[-1].y() == 1.0
     assert widget._figures["velocity"].get_points(0)[-1].y() == 2.0
+
+
+@pytest.mark.asyncio
+async def test_set_signal_position_velocity(widget: TabPosition) -> None:
+
+    widget.model.report_position_velocity(10.1, 20.2, 30.3, 40.4)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._position == 10.1
+    assert widget._velocity == 40.4

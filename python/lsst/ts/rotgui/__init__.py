@@ -30,9 +30,12 @@ else:
         __version__ = "?"
 
 from .application import *
+from .config import *
 from .constants import *
 from .control_panel import *
 from .enums import *
 from .main_window import *
 from .model import *
+from .signals import *
+from .status import *
 from .tab import *

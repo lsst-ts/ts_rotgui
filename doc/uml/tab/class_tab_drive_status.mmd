@@ -6,8 +6,12 @@ namespace guitool {
 
 namespace rotgui {
   class Model
+  class SignalDrive
 }
+
+Model *-- SignalDrive : emit()
 
 TabTemplate <|-- TabDriveStatus
 
 TabDriveStatus *-- Model
+TabDriveStatus --> SignalDrive : connect()

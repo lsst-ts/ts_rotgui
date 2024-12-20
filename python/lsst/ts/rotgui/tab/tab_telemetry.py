@@ -22,17 +22,30 @@
 __all__ = ["TabTelemetry"]
 
 from lsst.ts.guitool import (
-    ButtonStatus,
     TabTemplate,
     create_group_box,
     create_label,
     create_radio_indicators,
-    update_button_color,
+    update_boolean_indicator_status,
 )
-from PySide6.QtGui import QPalette
-from PySide6.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QVBoxLayout
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QRadioButton,
+    QVBoxLayout,
+)
+from qasync import asyncSlot
 
+from ..config import Config
 from ..model import Model
+from ..signals import (
+    SignalApplicationStatus,
+    SignalConfig,
+    SignalControl,
+    SignalPositionVelocity,
+)
 
 
 class TabTelemetry(TabTemplate):
@@ -58,7 +71,7 @@ class TabTelemetry(TabTemplate):
 
         self._telemetry = {
             "position_command": create_label(),
-            "position_actual": create_label(),
+            "position_current": create_label(),
             "rate_command_a": create_label(),
             "rate_feedback_a": create_label(),
             "motor_torque_a": create_label(),
@@ -70,14 +83,18 @@ class TabTelemetry(TabTemplate):
         }
 
         self._configuration = {
+            "max_velocity_limit": create_label(),
             "velocity_limit": create_label(),
             "acceleration_limit": create_label(),
             "position_error_threshold": create_label(),
             "upper_position_limit": create_label(),
             "lower_position_limit": create_label(),
+            "disable_limit_max_time": create_label(),
             "following_error_threshold": create_label(),
             "tracking_lost_timeout": create_label(),
             "tracking_success_threshold": create_label(),
+            "emergency_jerk_limit": create_label(),
+            "emergency_acceleration_limit": create_label(),
             "drives_enabled": create_label(),
         }
 
@@ -86,9 +103,18 @@ class TabTelemetry(TabTemplate):
             "simulink_flag": create_radio_indicators(11),
         }
 
-        self._set_default()
-
         self.set_widget_and_layout(is_scrollable=True)
+
+        self._set_signal_application_status(
+            self.model.signals["application_status"]  # type: ignore[arg-type]
+        )
+        self._set_signal_config(self.model.signals["config"])  # type: ignore[arg-type]
+        self._set_signal_control(
+            self.model.signals["control"]  # type: ignore[arg-type]
+        )
+        self._set_signal_position_velocity(
+            self.model.signals["position_velocity"]  # type: ignore[arg-type]
+        )
 
     def create_layout(self) -> QVBoxLayout:
 
@@ -119,7 +145,7 @@ class TabTelemetry(TabTemplate):
 
         layout = QFormLayout()
         layout.addRow("Rotator command:", self._telemetry["position_command"])
-        layout.addRow("Rotator position:", self._telemetry["position_actual"])
+        layout.addRow("Rotator position:", self._telemetry["position_current"])
 
         return create_group_box("Position", layout)
 
@@ -169,6 +195,9 @@ class TabTelemetry(TabTemplate):
         """
 
         layout = QFormLayout()
+        layout.addRow(
+            "Maximum velocity limit:", self._configuration["max_velocity_limit"]
+        )
         layout.addRow("Velocity limit:", self._configuration["velocity_limit"])
         layout.addRow("Acceleration limit:", self._configuration["acceleration_limit"])
 
@@ -179,6 +208,9 @@ class TabTelemetry(TabTemplate):
         )
         layout.addRow(
             "Lower position limit:", self._configuration["lower_position_limit"]
+        )
+        layout.addRow(
+            "Disable limit maximum time:", self._configuration["disable_limit_max_time"]
         )
 
         self.add_empty_row_to_form_layout(layout)
@@ -196,6 +228,16 @@ class TabTelemetry(TabTemplate):
         )
         layout.addRow(
             "Tracking lost timeout:", self._configuration["tracking_lost_timeout"]
+        )
+
+        self.add_empty_row_to_form_layout(layout)
+
+        layout.addRow(
+            "Emergency jerk limit:", self._configuration["emergency_jerk_limit"]
+        )
+        layout.addRow(
+            "Emergency acceleration limit:",
+            self._configuration["emergency_acceleration_limit"],
         )
 
         self.add_empty_row_to_form_layout(layout)
@@ -279,48 +321,265 @@ class TabTelemetry(TabTemplate):
             "Tracking success",
             "Position feedback fault",
             "Tracking lost",
-            "No new track command error:",
+            "No new track command error",
         ]
         for name, indicator in zip(names, self._indicators["simulink_flag"]):
             layout.addRow(f"{name}:", indicator)
 
         return create_group_box("Simulink Flag", layout)
 
-    def _set_default(self) -> None:
-        """Set the default values."""
+    def _set_signal_application_status(self, signal: SignalApplicationStatus) -> None:
+        """Set the application status signal.
 
-        # Telemetry
-        self._telemetry["position_command"].setText("0 deg")
-        self._telemetry["position_actual"].setText("0 deg")
+        Parameters
+        ----------
+        signal : `SignalApplicationStatus`
+            Signal.
+        """
 
-        self._telemetry["rate_command_a"].setText("0 deg/sec")
-        self._telemetry["rate_feedback_a"].setText("0 deg/sec")
-        self._telemetry["motor_torque_a"].setText("0 N*m")
+        signal.status.connect(self._callback_application_status)
+        signal.simulink_flag.connect(self._callback_simulink_flag)
 
-        self._telemetry["rate_command_b"].setText("0 deg/sec")
-        self._telemetry["rate_feedback_b"].setText("0 deg/sec")
-        self._telemetry["motor_torque_b"].setText("0 N*m")
+    @asyncSlot()
+    async def _callback_application_status(self, status: int) -> None:
+        """Callback of the application status.
 
-        self._telemetry["application_status_word"].setText("0x0")
+        Parameters
+        ----------
+        status : `int`
+            Application status.
+        """
 
-        self._telemetry["time_frame_difference"].setText("0 sec")
+        self._update_application_status(status)
 
-        # Configuration
-        self._configuration["velocity_limit"].setText("0 deg/sec")
-        self._configuration["acceleration_limit"].setText("0 deg/sec^2")
+    def _update_application_status(self, status: int) -> None:
+        """Update the application status.
 
-        self._configuration["position_error_threshold"].setText("0 deg")
-        self._configuration["upper_position_limit"].setText("0 deg")
-        self._configuration["lower_position_limit"].setText("0 deg")
+        Parameters
+        ----------
+        status : `int`
+            Application status.
+        """
 
-        self._configuration["following_error_threshold"].setText("0 deg")
+        self._telemetry["application_status_word"].setText(hex(status))
 
-        self._configuration["tracking_lost_timeout"].setText("0 sec")
-        self._configuration["tracking_success_threshold"].setText("0 deg")
+        faults = [0, 5, 6, 7, 8, 9, 11, 13, 14, 15]
+        self._update_boolean_indicators(
+            status, self._indicators["application_status"], faults
+        )
 
-        self._configuration["drives_enabled"].setText("False")
+    def _update_boolean_indicators(
+        self, status: int, indicators: list[QRadioButton], faults: list[int]
+    ) -> None:
+        """Update the boolean indicators.
 
-        # Set the default indicators
-        for indicators in self._indicators.values():
-            for indicator in indicators:
-                update_button_color(indicator, QPalette.Base, ButtonStatus.Default)
+        Parameters
+        ----------
+        status : `int`
+            Status.
+        indicators : `list` [`QRadioButton`]
+            Indicators.
+        faults : `list` [`int`]
+            Indexes of the faults.
+        """
+
+        for idx, indicator in enumerate(indicators):
+            update_boolean_indicator_status(
+                indicator,
+                status & (1 << idx),
+                is_fault=(idx in faults),
+            )
+
+    @asyncSlot()
+    async def _callback_simulink_flag(self, status: int) -> None:
+        """Callback of the Simulink flag.
+
+        Parameters
+        ----------
+        status : `int`
+            Simulink flag.
+        """
+
+        self._update_simulink_flag(status)
+
+    def _update_simulink_flag(self, status: int) -> None:
+        """Update the Simulink flag.
+
+        Parameters
+        ----------
+        status : `int`
+            Simulink flag.
+        """
+
+        faults = [5, 8, 9, 10]
+        self._update_boolean_indicators(
+            status, self._indicators["simulink_flag"], faults
+        )
+
+    def _set_signal_config(self, signal: SignalConfig) -> None:
+        """Set the config signal.
+
+        Parameters
+        ----------
+        signal : `SignalConfig`
+            Signal.
+        """
+
+        signal.config.connect(self._callback_config)
+
+    @asyncSlot()
+    async def _callback_config(self, config: Config) -> None:
+        """Callback of the configuration.
+
+        Parameters
+        ----------
+        config : `Config`
+            Configuration.
+        """
+
+        self._configuration["max_velocity_limit"].setText(
+            f"{config.max_velocity_limit} deg/sec"
+        )
+        self._configuration["velocity_limit"].setText(
+            f"{config.velocity_limit} deg/sec"
+        )
+        self._configuration["acceleration_limit"].setText(
+            f"{config.acceleration_limit} deg/sec^2"
+        )
+
+        self._configuration["position_error_threshold"].setText(
+            f"{config.position_error_threshold} deg"
+        )
+        self._configuration["upper_position_limit"].setText(
+            f"{config.upper_position_limit} deg"
+        )
+        self._configuration["lower_position_limit"].setText(
+            f"{config.lower_position_limit} deg"
+        )
+        self._configuration["disable_limit_max_time"].setText(
+            f"{config.disable_limit_max_time} sec"
+        )
+
+        self._configuration["following_error_threshold"].setText(
+            f"{config.following_error_threshold} deg"
+        )
+
+        self._configuration["tracking_lost_timeout"].setText(
+            f"{config.tracking_lost_timeout} sec"
+        )
+        self._configuration["tracking_success_threshold"].setText(
+            f"{config.track_success_position_threshold} deg"
+        )
+
+        self._configuration["emergency_jerk_limit"].setText(
+            f"{config.emergency_jerk_limit} deg/sec^3"
+        )
+        self._configuration["emergency_acceleration_limit"].setText(
+            f"{config.emergency_acceleration_limit} deg/sec^2"
+        )
+
+        color = Qt.green if config.drives_enabled else Qt.red
+        self._configuration["drives_enabled"].setText(
+            f"<font color='{color.name}'>{str(config.drives_enabled)}</font>"
+        )
+
+    def _set_signal_control(self, signal: SignalControl) -> None:
+        """Set the control signal.
+
+        Parameters
+        ----------
+        signal : `SignalControl`
+            Signal.
+        """
+
+        signal.rate_command.connect(self._callback_rate_command)
+        signal.rate_feedback.connect(self._callback_rate_feedback)
+        signal.torque.connect(self._callback_torque)
+        signal.time_difference.connect(self._callback_time_difference)
+
+    @asyncSlot()
+    async def _callback_rate_command(self, rates: list[float]) -> None:
+        """Callback of the commanded rates.
+
+        Parameters
+        ----------
+        rates : `list` [`float`]
+            Rates in deg/sec.
+        """
+
+        self._telemetry["rate_command_a"].setText(f"{rates[0]:7f} deg/sec")
+        self._telemetry["rate_command_b"].setText(f"{rates[1]:7f} deg/sec")
+
+    @asyncSlot()
+    async def _callback_rate_feedback(self, rates: list[float]) -> None:
+        """Callback of the feedback rates.
+
+        Parameters
+        ----------
+        rates : `list` [`float`]
+            Rates in deg/sec.
+        """
+
+        self._telemetry["rate_feedback_a"].setText(f"{rates[0]:7f} deg/sec")
+        self._telemetry["rate_feedback_b"].setText(f"{rates[1]:7f} deg/sec")
+
+    @asyncSlot()
+    async def _callback_torque(self, torques: list[float]) -> None:
+        """Callback of the motor torques.
+
+        Parameters
+        ----------
+        torques : `list` [`float`]
+            Torques in N*m.
+        """
+
+        self._telemetry["motor_torque_a"].setText(f"{torques[0]:7f} N*m")
+        self._telemetry["motor_torque_b"].setText(f"{torques[1]:7f} N*m")
+
+    @asyncSlot()
+    async def _callback_time_difference(self, time_difference: float) -> None:
+        """Callback of the time frame difference.
+
+        Parameters
+        ----------
+        time_difference : `float`
+            Time difference in seconds.
+        """
+
+        self._telemetry["time_frame_difference"].setText(f"{time_difference:7f} sec")
+
+    def _set_signal_position_velocity(self, signal: SignalPositionVelocity) -> None:
+        """Set the position-velocity signal.
+
+        Parameters
+        ----------
+        signal : `SignalPositionVelocity`
+            Signal.
+        """
+
+        signal.position_current.connect(self._callback_position_current)
+        signal.position_command.connect(self._callback_position_command)
+
+    @asyncSlot()
+    async def _callback_position_current(self, position: float) -> None:
+        """Callback of the current position.
+
+        Parameters
+        ----------
+        position : `float`
+            Position in deg.
+        """
+
+        self._telemetry["position_current"].setText(f"{position:7f} deg")
+
+    @asyncSlot()
+    async def _callback_position_command(self, position: float) -> None:
+        """Callback of the commanded position.
+
+        Parameters
+        ----------
+        position : `float`
+            Position in deg.
+        """
+
+        self._telemetry["position_command"].setText(f"{position:7f} deg")

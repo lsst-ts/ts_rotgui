@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # This file is part of ts_rotgui.
 #
 # Developed for the Vera Rubin Observatory Systems.
@@ -20,6 +19,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.rotgui import run_rotgui
+__all__ = ["Status"]
 
-run_rotgui()
+from dataclasses import dataclass, field
+
+from .constants import NUM_STRUT
+
+
+@dataclass
+class Status:
+    """System status."""
+
+    # Command source (enum `CommandSource`)
+    command_source: int = 0
+
+    # State (enum `lsst.ts.xml.enums.MTRotator.ControllerState`)
+    state: int = 0
+
+    # Enabled substate (enum `lsst.ts.xml.enums.MTRotator.EnabledSubstate`)
+    substate_enabled: int = 0
+
+    # Fault substate (enum `lsst.ts.xml.enums.MTRotator.FaultSubstate`)
+    substate_fault: int = 0
+
+    # Flag
+    application_status: int = 0
+    simulink_flag: int = 0
+
+    # Drive
+    status_word: list[int] = field(default_factory=lambda: [0] * NUM_STRUT)
+    latching_fault: list[int] = field(default_factory=lambda: [0] * NUM_STRUT)
+    copley_status: list[int] = field(default_factory=lambda: [0] * NUM_STRUT)
+    input_pin: list[int] = field(default_factory=lambda: [0] * NUM_STRUT)
