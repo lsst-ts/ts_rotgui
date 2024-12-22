@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.3.1:
+
+-------------
+0.3.1
+-------------
+
+* Fix the **Jenkinsfile.conda**.
+
 .. _lsst.ts.rotgui-0.3.0:
 
 -------------
