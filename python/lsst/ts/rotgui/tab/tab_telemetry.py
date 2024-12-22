@@ -507,8 +507,8 @@ class TabTelemetry(TabTemplate):
             Rates in deg/sec.
         """
 
-        self._telemetry["rate_command_a"].setText(f"{rates[0]:7f} deg/sec")
-        self._telemetry["rate_command_b"].setText(f"{rates[1]:7f} deg/sec")
+        self._telemetry["rate_command_a"].setText(f"{rates[0]:.7f} deg/sec")
+        self._telemetry["rate_command_b"].setText(f"{rates[1]:.7f} deg/sec")
 
     @asyncSlot()
     async def _callback_rate_feedback(self, rates: list[float]) -> None:
@@ -520,8 +520,8 @@ class TabTelemetry(TabTemplate):
             Rates in deg/sec.
         """
 
-        self._telemetry["rate_feedback_a"].setText(f"{rates[0]:7f} deg/sec")
-        self._telemetry["rate_feedback_b"].setText(f"{rates[1]:7f} deg/sec")
+        self._telemetry["rate_feedback_a"].setText(f"{rates[0]:.7f} deg/sec")
+        self._telemetry["rate_feedback_b"].setText(f"{rates[1]:.7f} deg/sec")
 
     @asyncSlot()
     async def _callback_torque(self, torques: list[float]) -> None:
@@ -533,8 +533,8 @@ class TabTelemetry(TabTemplate):
             Torques in N*m.
         """
 
-        self._telemetry["motor_torque_a"].setText(f"{torques[0]:7f} N*m")
-        self._telemetry["motor_torque_b"].setText(f"{torques[1]:7f} N*m")
+        self._telemetry["motor_torque_a"].setText(f"{torques[0]:.7f} N*m")
+        self._telemetry["motor_torque_b"].setText(f"{torques[1]:.7f} N*m")
 
     @asyncSlot()
     async def _callback_time_difference(self, time_difference: float) -> None:
@@ -546,7 +546,7 @@ class TabTelemetry(TabTemplate):
             Time difference in seconds.
         """
 
-        self._telemetry["time_frame_difference"].setText(f"{time_difference:7f} sec")
+        self._telemetry["time_frame_difference"].setText(f"{time_difference:.7f} sec")
 
     def _set_signal_position_velocity(self, signal: SignalPositionVelocity) -> None:
         """Set the position-velocity signal.
@@ -570,7 +570,7 @@ class TabTelemetry(TabTemplate):
             Position in deg.
         """
 
-        self._telemetry["position_current"].setText(f"{position:7f} deg")
+        self._telemetry["position_current"].setText(f"{position:.7f} deg")
 
     @asyncSlot()
     async def _callback_position_command(self, position: float) -> None:
@@ -582,4 +582,4 @@ class TabTelemetry(TabTemplate):
             Position in deg.
         """
 
-        self._telemetry["position_command"].setText(f"{position:7f} deg")
+        self._telemetry["position_command"].setText(f"{position:.7f} deg")

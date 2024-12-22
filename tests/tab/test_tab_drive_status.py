@@ -23,7 +23,7 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.rotgui import Model
+from lsst.ts.rotgui import NUM_STRUT, Model
 from lsst.ts.rotgui.tab import TabDriveStatus
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
@@ -51,10 +51,10 @@ async def test_set_signal_drive(widget: TabDriveStatus) -> None:
 
     # Triggered
     widget.model.report_drive_status(
-        [0xFFFF, 0xFFFF],
-        [0xFFFF, 0xFFFF],
-        [0xFFFFFFFF, 0xFFFFFFFF],
-        [0xE0, 0xE0],
+        [0xFFFF] * NUM_STRUT,
+        [0xFFFF] * NUM_STRUT,
+        [0xFFFFFFFF] * NUM_STRUT,
+        [0xE0] * NUM_STRUT,
     )
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -87,7 +87,9 @@ async def test_set_signal_drive(widget: TabDriveStatus) -> None:
                 assert indicator.palette().color(QPalette.Base) == Qt.green
 
     # Not triggered
-    widget.model.report_drive_status([0, 0], [0, 0], [0, 0], [0, 0])
+    widget.model.report_drive_status(
+        [0] * NUM_STRUT, [0] * NUM_STRUT, [0] * NUM_STRUT, [0] * NUM_STRUT
+    )
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)

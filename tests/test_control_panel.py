@@ -122,5 +122,5 @@ async def test_set_signal_position_velocity(widget: ControlPanel) -> None:
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    assert widget._labels["position"].text() == "10.100000"
-    assert widget._labels["odometer"].text() == "30.300000"
+    assert widget._labels["position"].text() == "10.1000000"
+    assert widget._labels["odometer"].text() == "30.3000000"

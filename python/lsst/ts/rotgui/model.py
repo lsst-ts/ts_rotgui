@@ -28,6 +28,7 @@ from lsst.ts.xml.enums import MTRotator
 from PySide6.QtCore import Signal
 
 from .config import Config
+from .constants import NUM_STRUT
 from .enums import CommandSource
 from .signals import (
     SignalApplicationStatus,
@@ -122,17 +123,19 @@ class Model(object):
         )
 
         signal_drive = self.signals["drive"]
-        signal_drive.status_word.emit([0, 0])  # type: ignore[attr-defined]
-        signal_drive.latching_fault.emit([0, 0])  # type: ignore[attr-defined]
-        signal_drive.copley_status.emit([0, 0])  # type: ignore[attr-defined]
-        signal_drive.input_pin.emit([0, 0])  # type: ignore[attr-defined]
+        signal_drive.status_word.emit([0] * NUM_STRUT)  # type: ignore[attr-defined]
+        signal_drive.latching_fault.emit([0] * NUM_STRUT)  # type: ignore[attr-defined]
+        signal_drive.copley_status.emit([0] * NUM_STRUT)  # type: ignore[attr-defined]
+        signal_drive.input_pin.emit([0] * NUM_STRUT)  # type: ignore[attr-defined]
 
         signal_application_status = self.signals["application_status"]
         signal_application_status.status.emit(0)  # type: ignore[attr-defined]
         signal_application_status.simulink_flag.emit(0)  # type: ignore[attr-defined]
 
         self.report_config(Config())
-        self.report_control_data([0.0, 0.0], [0.0, 0.0], [0.0, 0.0], 0.0)
+        self.report_control_data(
+            [0.0] * NUM_STRUT, [0.0] * NUM_STRUT, [0.0] * NUM_STRUT, 0.0
+        )
         self.report_position_velocity(0.0, 0.0, 0.0, 0.0)
 
     def report_config(self, config: Config) -> None:

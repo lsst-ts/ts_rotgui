@@ -1,2 +1,2 @@
 @Library('JenkinsShared')_
-CondaPipeline([], "ts-rotgui", "lsst.ts.rotgui", "noarch")
+CondaPipeline(["ts_config_mttcs"], "ts-rotgui", "lsst.ts.rotgui", "noarch")

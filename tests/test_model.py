@@ -22,7 +22,7 @@
 import logging
 
 import pytest
-from lsst.ts.rotgui import CommandSource, Config, Model
+from lsst.ts.rotgui import NUM_STRUT, CommandSource, Config, Model
 from lsst.ts.xml.enums import MTRotator
 from pytestqt.qtbot import QtBot
 
@@ -88,7 +88,9 @@ def test_report_control_data(qtbot: QtBot, model: Model) -> None:
         model.signals["control"].time_difference,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
-        model.report_control_data([0.0, 0.0], [0.0, 0.0], [0.0, 0.0], 0.0)
+        model.report_control_data(
+            [0.0] * NUM_STRUT, [0.0] * NUM_STRUT, [0.0] * NUM_STRUT, 0.0
+        )
 
 
 def test_report_position_velocity(qtbot: QtBot, model: Model) -> None:
@@ -110,7 +112,7 @@ def test_report_power(qtbot: QtBot, model: Model) -> None:
         model.signals["power"].voltage,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
-        model.report_power([0.0, 0.0], 0.0)
+        model.report_power([0.0] * NUM_STRUT, 0.0)
 
 
 def test_report_state(qtbot: QtBot, model: Model) -> None:
@@ -179,17 +181,19 @@ def test_report_application_status(qtbot: QtBot, model: Model) -> None:
 def test_report_drive_status(qtbot: QtBot, model: Model) -> None:
 
     with qtbot.waitSignal(model.signals["drive"].status_word, timeout=TIMEOUT):
-        model.report_drive_status([1, 2], [0, 0], [0, 0], [0, 0])
+        model.report_drive_status(
+            [1, 2], [0] * NUM_STRUT, [0] * NUM_STRUT, [0] * NUM_STRUT
+        )
 
     assert model._status.status_word == [1, 2]
 
     with qtbot.waitSignal(model.signals["drive"].latching_fault, timeout=TIMEOUT):
-        model.report_drive_status([1, 2], [3, 4], [0, 0], [0, 0])
+        model.report_drive_status([1, 2], [3, 4], [0] * NUM_STRUT, [0] * NUM_STRUT)
 
     assert model._status.latching_fault == [3, 4]
 
     with qtbot.waitSignal(model.signals["drive"].copley_status, timeout=TIMEOUT):
-        model.report_drive_status([1, 2], [3, 4], [5, 6], [0, 0])
+        model.report_drive_status([1, 2], [3, 4], [5, 6], [0] * NUM_STRUT)
 
     assert model._status.copley_status == [5, 6]
 
