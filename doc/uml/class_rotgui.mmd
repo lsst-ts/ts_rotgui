@@ -27,6 +27,8 @@ Model *-- SignalConfig : emit()
 Model ..> Config
 
 ControlPanel *-- Model
+ControlPanel --> SignalState : connect()
+ControlPanel --> SignalPositionVelocity : connect()
 
 TabSettings *-- Model
 

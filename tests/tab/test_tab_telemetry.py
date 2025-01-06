@@ -102,16 +102,16 @@ async def test_set_signal_control(widget: TabTelemetry) -> None:
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    assert widget._telemetry["rate_command_a"].text() == "11.100000 deg/sec"
-    assert widget._telemetry["rate_command_b"].text() == "22.200000 deg/sec"
+    assert widget._telemetry["rate_command_a"].text() == "11.1000000 deg/sec"
+    assert widget._telemetry["rate_command_b"].text() == "22.2000000 deg/sec"
 
-    assert widget._telemetry["rate_feedback_a"].text() == "33.300000 deg/sec"
-    assert widget._telemetry["rate_feedback_b"].text() == "44.400000 deg/sec"
+    assert widget._telemetry["rate_feedback_a"].text() == "33.3000000 deg/sec"
+    assert widget._telemetry["rate_feedback_b"].text() == "44.4000000 deg/sec"
 
-    assert widget._telemetry["motor_torque_a"].text() == "55.500000 N*m"
-    assert widget._telemetry["motor_torque_b"].text() == "66.600000 N*m"
+    assert widget._telemetry["motor_torque_a"].text() == "55.5000000 N*m"
+    assert widget._telemetry["motor_torque_b"].text() == "66.6000000 N*m"
 
-    assert widget._telemetry["time_frame_difference"].text() == "77.700000 sec"
+    assert widget._telemetry["time_frame_difference"].text() == "77.7000000 sec"
 
 
 @pytest.mark.asyncio
@@ -122,5 +122,5 @@ async def test_set_signal_position_velocity(widget: TabTelemetry) -> None:
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    assert widget._telemetry["position_current"].text() == "10.100000 deg"
-    assert widget._telemetry["position_command"].text() == "20.200000 deg"
+    assert widget._telemetry["position_current"].text() == "10.1000000 deg"
+    assert widget._telemetry["position_command"].text() == "20.2000000 deg"

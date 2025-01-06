@@ -523,7 +523,7 @@ class ControlPanel(QWidget):
             Position in deg.
         """
 
-        self._labels["position"].setText(f"{position:7f}")
+        self._labels["position"].setText(f"{position:.7f}")
 
     @asyncSlot()
     async def _callback_odometer(self, odometer: float) -> None:
@@ -535,7 +535,7 @@ class ControlPanel(QWidget):
             Odometer in deg.
         """
 
-        self._labels["odometer"].setText(f"{odometer:7f}")
+        self._labels["odometer"].setText(f"{odometer:.7f}")
 
     def _set_default(self) -> None:
         """Set the default."""

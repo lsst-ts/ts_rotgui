@@ -6,6 +6,17 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.3.1:
+
+-------------
+0.3.1
+-------------
+
+* Fix the **Jenkinsfile.conda**.
+* Use the **NUM_STRUT** in the **Model** class.
+* Fix the format.
+* Update the **class_rotgui.mmd**.
+
 .. _lsst.ts.rotgui-0.3.0:
 
 -------------
