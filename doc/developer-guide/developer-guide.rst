@@ -14,6 +14,8 @@ Dependencies
 * `ts_xml <https://github.com/lsst-ts/ts_xml>`_
 * `ts_guitool <https://github.com/lsst-ts/ts_guitool>`_
 * `ts_tcpip <https://github.com/lsst-ts/ts_tcpip>`_
+* `ts_salobj <https://github.com/lsst-ts/ts_salobj>`_
+* `ts_hexrotcomm <https://github.com/lsst-ts/ts_hexrotcomm>`_
 
 .. _Architecture:
 

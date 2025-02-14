@@ -5,6 +5,8 @@
 setupRequired(ts_xml)
 setupRequired(ts_guitool)
 setupRequired(ts_tcpip)
+setupRequired(ts_salobj)
+setupRequired(ts_hexrotcomm)
 
 envPrepend(PATH, ${PRODUCT_DIR}/bin)
 
