@@ -307,9 +307,9 @@ class TabDriveStatus(TabTemplate):
         """
 
         names = [
-            "Bit 6 - Safety interlock OK:",
-            "Bit 7 - Extend limit switch hit:",
-            "Bit 8 - Retract limit switch hit:",
+            "Bit 5/15 - Safety interlock OK:",
+            "Bit 6/16 - Extend limit switch hit:",
+            "Bit 7/17 - Retract limit switch hit:",
         ]
         return create_group_box(
             "Input Pin State (0x219A)",
@@ -370,6 +370,7 @@ class TabDriveStatus(TabTemplate):
             faults,
             warnings,
             [],
+            [],
         )
 
     def _update_boolean_indicators(
@@ -379,6 +380,7 @@ class TabDriveStatus(TabTemplate):
         faults: list[int],
         warnings: list[int],
         default_errors: list[int],
+        reversed_bits: list[int],
     ) -> None:
         """Update the boolean indicators.
 
@@ -394,12 +396,16 @@ class TabDriveStatus(TabTemplate):
             Indexes of the warnings.
         default_errors : `list` [`int`]
             Default errors.
+        reversed_bits : `list` [`int`]
+            Reversed bits to reverse the triggered status.
         """
 
         for idx, indicator in enumerate(indicators):
+            is_bit_on = status & (1 << idx)
+            is_triggered = (not is_bit_on) if (idx in reversed_bits) else is_bit_on
             update_boolean_indicator_status(
                 indicator,
-                status & (1 << idx),
+                is_triggered,
                 is_fault=(idx in faults),
                 is_warning=(idx in warnings),
                 is_default_error=(idx in default_errors),
@@ -436,6 +442,7 @@ class TabDriveStatus(TabTemplate):
             faults,
             [],
             [],
+            [],
         )
 
     @asyncSlot()
@@ -470,40 +477,39 @@ class TabDriveStatus(TabTemplate):
             faults,
             warnings,
             [],
+            [],
         )
 
     @asyncSlot()
-    async def _callback_input_pin(self, input_pin: list[int]) -> None:
+    async def _callback_input_pin(self, input_pin: int) -> None:
         """Callback of the input pin status.
 
         Parameters
         ----------
-        input_pin : `list` [`int`]
-            Input pin status of [axia_a, axis_b].
+        input_pin : `int`
+            Input pin status.
         """
 
-        self._update_input_pin_status(input_pin[0], "axis_a")
-        self._update_input_pin_status(input_pin[1], "axis_b")
+        # Pin 6, 7, 8 -> bit 5, 6, 7
+        # Pin 16, 17, 18 -> bit 15, 16, 17
 
-    def _update_input_pin_status(self, status: int, actuator: str) -> None:
-        """Update the input pin status.
-
-        Parameters
-        ----------
-        status : `int`
-            Status word.
-        actuator : `str`
-            Actuator ("axis_a" or "axis_b").
-        """
-
-        bit_offset = 5
+        bit_offset_first = 5
+        bit_offset_second = 15
 
         faults = [1, 2]
         default_errors = [0]
-        self._update_boolean_indicators(
-            status >> bit_offset,
-            self._list_input_pin_state[actuator],
-            faults,
-            [],
-            default_errors,
-        )
+
+        # If there is the hit of limit switch, the pin state is "Low" instead
+        # of "High".
+        reversed_bits = [1, 2]
+        for offset, axis in zip(
+            [bit_offset_first, bit_offset_second], ["axis_a", "axis_b"]
+        ):
+            self._update_boolean_indicators(
+                input_pin >> offset,
+                self._list_input_pin_state[axis],
+                faults,
+                [],
+                default_errors,
+                reversed_bits,
+            )
