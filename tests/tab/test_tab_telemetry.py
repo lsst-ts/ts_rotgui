@@ -23,7 +23,7 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.rotgui import Config, Model
+from lsst.ts.rotgui import Model
 from lsst.ts.rotgui.tab import TabTelemetry
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
@@ -66,35 +66,6 @@ async def test_set_signal_application_status(widget: TabTelemetry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_set_signal_config(widget: TabTelemetry) -> None:
-
-    config = Config(1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 10.1, 11.1, 12.2, True)
-    widget.model.report_config(config)
-
-    # Sleep so the event loop can access CPU to handle the signal
-    await asyncio.sleep(1)
-
-    assert widget._configuration["velocity_limit"].text() == "1.1 deg/sec"
-    assert widget._configuration["acceleration_limit"].text() == "2.2 deg/sec^2"
-    assert widget._configuration["position_error_threshold"].text() == "3.3 deg"
-    assert widget._configuration["upper_position_limit"].text() == "4.4 deg"
-    assert widget._configuration["lower_position_limit"].text() == "5.5 deg"
-    assert widget._configuration["following_error_threshold"].text() == "6.6 deg"
-    assert widget._configuration["tracking_success_threshold"].text() == "7.7 deg"
-    assert widget._configuration["tracking_lost_timeout"].text() == "8.8 sec"
-    assert widget._configuration["emergency_jerk_limit"].text() == "9.9 deg/sec^3"
-    assert (
-        widget._configuration["emergency_acceleration_limit"].text() == "10.1 deg/sec^2"
-    )
-    assert widget._configuration["disable_limit_max_time"].text() == "11.1 sec"
-    assert widget._configuration["max_velocity_limit"].text() == "12.2 deg/sec"
-    assert (
-        widget._configuration["drives_enabled"].text()
-        == "<font color='green'>True</font>"
-    )
-
-
-@pytest.mark.asyncio
 async def test_set_signal_control(widget: TabTelemetry) -> None:
 
     widget.model.report_control_data([11.1, 22.2], [33.3, 44.4], [55.5, 66.6], 77.7)
@@ -124,3 +95,15 @@ async def test_set_signal_position_velocity(widget: TabTelemetry) -> None:
 
     assert widget._telemetry["position_current"].text() == "10.1000000 deg"
     assert widget._telemetry["position_command"].text() == "20.2000000 deg"
+
+
+@pytest.mark.asyncio
+async def test_set_signal_power(widget: TabTelemetry) -> None:
+
+    widget.model.report_power([1.1, 2.2], 3.3)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._telemetry["current_a"].text() == "1.100000 A"
+    assert widget._telemetry["current_b"].text() == "2.200000 A"
