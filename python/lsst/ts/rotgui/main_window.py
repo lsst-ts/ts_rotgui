@@ -31,7 +31,10 @@ from lsst.ts.guitool import (
     QMessageBoxAsync,
     get_button_action,
     get_config_dir,
+    prompt_dialog_critical,
+    prompt_dialog_warning,
     read_yaml_file,
+    run_command,
 )
 from lsst.ts.tcpip import LOCALHOST_IPV4
 from PySide6.QtCore import Qt
@@ -41,7 +44,14 @@ from qasync import QApplication, asyncSlot
 
 from .control_panel import ControlPanel
 from .model import Model
-from .tab import TabDriveStatus, TabPosition, TabPower, TabSettings, TabTelemetry
+from .tab import (
+    TabConfig,
+    TabDriveStatus,
+    TabPosition,
+    TabPower,
+    TabSettings,
+    TabTelemetry,
+)
 
 
 class MainWindow(QMainWindow):
@@ -94,6 +104,7 @@ class MainWindow(QMainWindow):
 
         # Control tabs
         tabs = [
+            TabConfig("Configuration", self.model),
             TabTelemetry("Telemetry", self.model),
             TabDriveStatus("Drive Status (Axis A+B)", self.model),
             TabPosition("Position", self.model),
@@ -281,11 +292,21 @@ class MainWindow(QMainWindow):
         action_exit = self._get_action("Exit")
         action_exit.setEnabled(False)
 
-        dialog = self._create_dialog_exit()
-        result = await dialog.show()
+        if self.model.is_connected():
+            await prompt_dialog_warning(
+                "_callback_exit()",
+                (
+                    "The controller is still connected. Please disconnect "
+                    "it before exiting the user interface."
+                ),
+            )
 
-        if result == QMessageBoxAsync.Ok:
-            QApplication.instance().quit()
+        else:
+            dialog = self._create_dialog_exit()
+            result = await dialog.show()
+
+            if result == QMessageBoxAsync.Ok:
+                QApplication.instance().quit()
 
         action_exit.setEnabled(True)
 
@@ -311,7 +332,7 @@ class MainWindow(QMainWindow):
 
         Returns
         -------
-        dialog : `QMessageBoxAsync`
+        dialog : `lsst.ts.guitool.QMessageBoxAsync`
             Exit dialog.
         """
 
@@ -333,13 +354,86 @@ class MainWindow(QMainWindow):
     async def _callback_connect(self) -> None:
         """Callback function to connect to the controller."""
 
-        self.log.info("Connect to the controller.")
+        action_connect = self._get_action("Connect")
+        action_connect.setEnabled(False)
+
+        if self.model.is_connected():
+            await prompt_dialog_warning(
+                "_callback_connect()", "The controller is already connected."
+            )
+
+        else:
+            try:
+                await run_command(self.model.connect)
+
+            except Exception as error:
+                await prompt_dialog_critical(
+                    "_callback_connect",
+                    f"Cannot connect to the controller - {error}",
+                )
+
+        action_connect.setEnabled(True)
 
     @asyncSlot()
     async def _callback_disconnect(self) -> None:
-        """Callback function to disconnect from the controller."""
+        """Callback function to disconnect from the controller.
 
-        self.log.info("Disconnect from the controller.")
+        The 'connect', 'disconnect' and 'exit' actions will be disabled before
+        disconnecting and re-enabled after the controller is disconnected. That
+        prevents the operator from trying to connect as asynchronous tasks are
+        being closed during the disconnection command, thus preventing
+        unpredictable application behavior.
+        """
+
+        # If the commander is not CSC, notify the user.
+        if self.model.is_connected() and (not self.model.is_csc_commander()):
+            dialog = self._create_dialog_disconnect()
+            result = await dialog.show()
+
+            if result == QMessageBoxAsync.Cancel:
+                return
+
+        action_connect = self._get_action("Connect")
+        action_connect.setEnabled(False)
+
+        action_disconnect = self._get_action("Disconnect")
+        action_disconnect.setEnabled(False)
+
+        action_exit = self._get_action("Exit")
+        action_exit.setEnabled(False)
+
+        await run_command(self.model.disconnect)
+
+        action_connect.setEnabled(True)
+        action_disconnect.setEnabled(True)
+        action_exit.setEnabled(True)
+
+    def _create_dialog_disconnect(self) -> QMessageBoxAsync:
+        """Create the disconnect dialog.
+
+        Returns
+        -------
+        dialog : `lsst.ts.guitool.QMessageBoxAsync`
+            Disconnect dialog.
+        """
+
+        dialog = QMessageBoxAsync()
+        dialog.setIcon(QMessageBoxAsync.Warning)
+        dialog.setWindowTitle("disconnect")
+
+        dialog.setText(
+            "The current commander is GUI. Please consider to switch to CSC "
+            "before the disconnection.\n\n"
+            "Do you want to continue the disconnection?"
+        )
+
+        dialog.addButton(QMessageBoxAsync.Ok)
+        dialog.addButton(QMessageBoxAsync.Cancel)
+
+        # Block the user to interact with other running widgets
+        dialog.setModal(True)
+
+        return dialog
 
     @asyncSlot()
     async def _callback_settings(self) -> None:
