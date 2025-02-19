@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.3.2:
+
+-------------
+0.3.2
+-------------
+
+* Remove the **ts_idl**.
+
 .. _lsst.ts.rotgui-0.3.1:
 
 -------------
