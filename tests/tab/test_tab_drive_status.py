@@ -54,7 +54,7 @@ async def test_set_signal_drive(widget: TabDriveStatus) -> None:
         [0xFFFF] * NUM_STRUT,
         [0xFFFF] * NUM_STRUT,
         [0xFFFFFFFF] * NUM_STRUT,
-        [0xE0] * NUM_STRUT,
+        0x8020,
     )
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -88,7 +88,7 @@ async def test_set_signal_drive(widget: TabDriveStatus) -> None:
 
     # Not triggered
     widget.model.report_drive_status(
-        [0] * NUM_STRUT, [0] * NUM_STRUT, [0] * NUM_STRUT, [0] * NUM_STRUT
+        [0] * NUM_STRUT, [0] * NUM_STRUT, [0] * NUM_STRUT, 0
     )
 
     # Sleep so the event loop can access CPU to handle the signal

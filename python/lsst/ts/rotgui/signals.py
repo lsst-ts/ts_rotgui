@@ -114,8 +114,8 @@ class SignalDrive(QtCore.QObject):
     # Copley drive status of [axia_a, axis_b]
     copley_status = QtCore.Signal(object)
 
-    # Input pin status of [axia_a, axis_b]
-    input_pin = QtCore.Signal(object)
+    # Input pin status
+    input_pin = QtCore.Signal(int)
 
 
 class SignalConfig(QtCore.QObject):

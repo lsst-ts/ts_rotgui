@@ -6,6 +6,25 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.4.0:
+
+-------------
+0.4.0
+-------------
+
+* Depend on the **ts_hexrotcomm**.
+* Copy the **structs.py** from the **ts_mtrotator**.
+* Add the ``MAX_ACCELERATION`` and ``MAX_JERK`` to **contants.py**.
+* Update the enum value to be consistent with the **ts_rotator_controller**.
+* Remove the **config.py**.
+* Fix the input pin in **TabDriveStatus**.
+* Support the TCP/IP communication with the controller.
+* Update the **MainWindow** to connect/disconnect the controller.
+* Extract the **TabConfig** from **TabTelemetry**.
+* Update the **TabTelemetry** to show the current data.
+* Remove the log button in **ControlPanel**.
+* Support the simulation mode.
+
 .. _lsst.ts.rotgui-0.3.2:
 
 -------------

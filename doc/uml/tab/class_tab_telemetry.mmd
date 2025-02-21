@@ -6,24 +6,21 @@ namespace guitool {
 
 namespace rotgui {
   class Model
-  class Config
   class SignalApplicationStatus
-  class SignalConfig
   class SignalControl
   class SignalPositionVelocity
+  class SignalPower
 }
 
-Model ..> Config
 Model *-- SignalApplicationStatus : emit()
-Model *-- SignalConfig : emit()
 Model *-- SignalControl : emit()
 Model *-- SignalPositionVelocity : emit()
+Model *-- SignalPower : emit()
 
 TabTemplate <|-- TabTelemetry
 
 TabTelemetry *-- Model
-TabTelemetry ..> Config
 TabTelemetry --> SignalApplicationStatus : connect()
-TabTelemetry --> SignalConfig : connect()
 TabTelemetry --> SignalControl : connect()
 TabTelemetry --> SignalPositionVelocity : connect()
+TabTelemetry --> SignalPower : connect()

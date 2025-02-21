@@ -33,6 +33,8 @@ test:
     - ts-xml
     - ts-guitool
     - ts-tcpip
+    - ts-salobj
+    - ts-hexrotcomm
   source_files:
     - python
     - bin
@@ -72,3 +74,5 @@ requirements:
     - ts-xml
     - ts-guitool
     - ts-tcpip
+    - ts-salobj
+    - ts-hexrotcomm

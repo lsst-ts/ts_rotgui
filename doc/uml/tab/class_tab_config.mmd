@@ -1,0 +1,20 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace rotgui {
+  class Model
+  class Config
+  class SignalConfig
+}
+
+Model ..> Config
+Model *-- SignalConfig : emit()
+
+TabTemplate <|-- TabConfig
+
+TabConfig *-- Model
+TabConfig ..> Config
+TabConfig --> SignalConfig : connect()

@@ -14,6 +14,8 @@ Dependencies
 * `ts_xml <https://github.com/lsst-ts/ts_xml>`_
 * `ts_guitool <https://github.com/lsst-ts/ts_guitool>`_
 * `ts_tcpip <https://github.com/lsst-ts/ts_tcpip>`_
+* `ts_salobj <https://github.com/lsst-ts/ts_salobj>`_
+* `ts_hexrotcomm <https://github.com/lsst-ts/ts_hexrotcomm>`_
 
 .. _Architecture:
 
@@ -35,6 +37,8 @@ rotgui
 * **ControlPanel** has the commands to control the controller.
 * **Config** is a data class that has the configuration details in the rotator control system.
 * **Status** is a data class that has the current controller status.
+* **CommandTelemetryClient** is the controller to communicate with the low-level controller.
+* **MockController** is the mock controller to support the simulation mode.
 
 The model–view–controller (MVC) architecture is used in this module.
 In this design, the view always shows the data sent from the model.
@@ -80,6 +84,7 @@ rotgui.tab
 * **TabSettings** shows the settings of GUI.
 * **TabTelemetry** shows the telemetry of controller.
 * **TabPower** shows the power status.
+* **TabConfig** shows the configuration.
 
 The class diagrams for each table class are listed below to give you the idea of class relationship.
 
@@ -122,6 +127,14 @@ rotgui.tab.Power
 
 .. mermaid:: ../uml/tab/class_tab_power.mmd
     :caption: Class diagram of TabPower class
+
+.. _lsst.ts.rotgui-modules_hexgui_tab_config:
+
+rotgui.tab.Config
+--------------------
+
+.. mermaid:: ../uml/tab/class_tab_config.mmd
+    :caption: Class diagram of TabConfig class
 
 .. _API:
 

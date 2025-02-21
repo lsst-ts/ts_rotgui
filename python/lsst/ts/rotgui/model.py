@@ -21,15 +21,19 @@
 
 __all__ = ["Model"]
 
+import asyncio
 import logging
+import types
 import typing
 
+from lsst.ts.hexrotcomm import Command, CommandTelemetryClient
+from lsst.ts.tcpip import LOCALHOST_IPV4
 from lsst.ts.xml.enums import MTRotator
 from PySide6.QtCore import Signal
 
-from .config import Config
 from .constants import NUM_STRUT
-from .enums import CommandSource
+from .enums import CommandCode, CommandSource, TriggerEnabledSubState, TriggerState
+from .mock_controller import MockController
 from .signals import (
     SignalApplicationStatus,
     SignalConfig,
@@ -40,6 +44,7 @@ from .signals import (
     SignalState,
 )
 from .status import Status
+from .structs import Config, Telemetry
 
 
 class Model(object):
@@ -50,7 +55,7 @@ class Model(object):
     log : `logging.Logger`
         A logger.
     host : `str`, optional
-        Host address. (the default is "localhost")
+        Host address. (the default is LOCALHOST_IPV4)
     port : `int`, optional
         Port to connect. (the default is 5570)
     timeout_connection : `float`, optional
@@ -70,12 +75,14 @@ class Model(object):
         Duration to refresh the data in milliseconds.
     signals : `dict`
         Signals.
+    client : `lsst.ts.hexrotcomm.CommandTelemetryClient` or None
+        Command and telemetry client. (the default is None)
     """
 
     def __init__(
         self,
         log: logging.Logger,
-        host: str = "localhost",
+        host: str = LOCALHOST_IPV4,
         port: int = 5570,
         timeout_connection: float = 10.0,
         is_simulation_mode: bool = False,
@@ -91,6 +98,8 @@ class Model(object):
         }
 
         self._is_simulation_mode = is_simulation_mode
+        self._mock_ctrl: MockController | None = None
+
         self.duration_refresh = duration_refresh
 
         self._status = Status()
@@ -104,6 +113,371 @@ class Model(object):
             "position_velocity": SignalPositionVelocity(),
             "power": SignalPower(),
         }
+
+        self.client: CommandTelemetryClient | None = None
+
+    def is_connected(self) -> bool:
+        """Check if the client is connected.
+
+        Returns
+        -------
+        `bool`
+            True if the client is connected.
+        """
+
+        return (self.client is not None) and self.client.connected
+
+    async def connect(self) -> None:
+        """Connect to the low-level controller.
+
+        Raises
+        ------
+        `RuntimeError`
+            If the connection times out or is refused.
+        """
+
+        await self.disconnect()
+
+        try:
+            if self._is_simulation_mode:
+                self._mock_ctrl = MockController(
+                    self.log,
+                )
+                await self._mock_ctrl.start_task
+
+                host = LOCALHOST_IPV4
+                port = self._mock_ctrl.port
+
+            else:
+                host = self.connection_information["host"]
+                port = self.connection_information["port"]
+
+            self.log.info(f"Connecting to {host}:{port}.")
+
+            self.client = CommandTelemetryClient(
+                log=self.log,
+                ConfigClass=Config,
+                TelemetryClass=Telemetry,
+                host=host,
+                port=port,
+                connect_callback=self.connect_callback,
+                config_callback=self.config_callback,
+                telemetry_callback=self.telemetry_callback,
+            )
+
+            await asyncio.wait_for(
+                self.client.start_task,
+                timeout=self.connection_information["timeout_connection"],  # type: ignore[arg-type]
+            )
+
+        except asyncio.TimeoutError:
+            raise RuntimeError("Timed out while connecting to the controller")
+
+        except ConnectionRefusedError:
+            raise RuntimeError("Connection refused by the controller.")
+
+        except Exception:
+            raise
+
+    async def disconnect(self) -> None:
+        """Disconnect from the low-level controller."""
+
+        # Close the client
+        if self.is_connected():
+            try:
+                # Workaround the mypy check
+                assert self.client is not None
+
+                await self.client.close()
+
+            except Exception:
+                self.log.exception("disconnect(): self.client.close() failed")
+
+        self.client = None
+
+        # Close the mock controller
+        if self._mock_ctrl is not None:
+            try:
+                await self._mock_ctrl.close()
+
+            except Exception:
+                self.log.exception("disconnect: self._mock_ctrl.close() failed")
+
+        self._mock_ctrl = None
+
+    async def connect_callback(self, client: CommandTelemetryClient) -> None:
+        """Called when the client socket connects or disconnects.
+
+        Parameters
+        ----------
+        client : `lsst.ts.hexrotcomm.CommandTelemetryClient`
+            TCP/IP client.
+        """
+
+        if client.should_be_connected and not client.connected:
+            self.log.error("Lost connection to the low-level controller")
+
+        if client.connected:
+            self.log.info("Connected to the low-level controller")
+        else:
+            self.log.info("Disconnected from the low-level controller")
+
+    async def config_callback(self, client: CommandTelemetryClient) -> None:
+        """Called when the TCP/IP controller outputs configuration.
+
+        Parameters
+        ----------
+        client : `lsst.ts.hexrotcomm.CommandTelemetryClient`
+            TCP/IP client.
+        """
+
+        self.report_config(client.config)
+
+    async def telemetry_callback(self, client: CommandTelemetryClient) -> None:
+        """Called when the TCP/IP controller outputs telemetry.
+
+        Parameters
+        ----------
+        client : `lsst.ts.hexrotcomm.CommandTelemetryClient`
+            TCP/IP client.
+        """
+
+        telemetry = client.telemetry
+
+        # Report the control data
+        # The torque from the low-level controller is N-m/1e6
+        # (and is an integer); convert it to N-m
+        timestamp = client.header.tai_sec + client.header.tai_nsec * 1e-9
+        self.report_control_data(
+            [telemetry.rate_cmd_ch_a, telemetry.rate_cmd_ch_b],
+            [telemetry.current_vel_ch_a_fb, telemetry.current_vel_ch_b_fb],
+            [telemetry.motor_torque_axis_a / 1e6, telemetry.motor_torque_axis_b / 1e6],
+            timestamp - self._status.timestamp,
+        )
+        self._status.timestamp = timestamp
+
+        # Report the position and velocity
+        self.report_position_velocity(
+            telemetry.current_pos,
+            telemetry.demand_pos,
+            telemetry.rotator_odometer,
+            (telemetry.current_vel_ch_a_fb + telemetry.current_vel_ch_b_fb) / 2.0,
+        )
+
+        # Report the power
+        self.report_power(telemetry.motor_current, telemetry.bus_voltage)
+
+        # Report the state
+
+        # See ts_rotator_controller repository for the enum value:
+        # AppStatus_CommandByCsc = 0x400
+        command_source = (
+            CommandSource.CSC
+            if (telemetry.application_status & 0x400)
+            else CommandSource.GUI
+        )
+        self.report_state(
+            command_source,
+            MTRotator.ControllerState(telemetry.state),
+            MTRotator.EnabledSubstate(telemetry.enabled_substate),
+            MTRotator.FaultSubstate(telemetry.fault_substate),
+        )
+
+        # Report application status
+        self.report_application_status(
+            telemetry.application_status,
+            self._get_simulink_flag(telemetry),
+        )
+
+        # Report drive status
+        self.report_drive_status(
+            [telemetry.status_word_drive0, telemetry.status_word_drive0_axis_b],
+            [
+                telemetry.latching_fault_status_register,
+                telemetry.latching_fault_status_register_axis_b,
+            ],
+            list(telemetry.copley_fault_status_register),
+            telemetry.input_pin_states,
+        )
+
+    def _get_simulink_flag(self, telemetry: Telemetry) -> int:
+        """Get the simulink flag.
+
+        Parameters
+        ----------
+        telemetry : `Telemetry`
+            Telemetry.
+
+        Returns
+        -------
+        simulink_flag : `int`
+            Simulink flag.
+        """
+
+        flags = [
+            "flags_initialization_complete",
+            "flags_slew_complete",
+            "flags_pt2pt_move_complete",
+            "flags_new_pt2pt_command",
+            "flags_stop_complete",
+            "flags_following_error",
+            "flags_move_success",
+            "flags_tracking_success",
+            "flags_position_feedback_fault",
+            "flags_tracking_lost",
+            "flags_no_new_track_cmd_error",
+        ]
+
+        simulink_flag = 0
+        for idx, flag in enumerate(flags):
+            if getattr(telemetry, flag) != 0.0:
+                simulink_flag += 1 << idx
+
+        return simulink_flag
+
+    def is_csc_commander(self) -> bool:
+        """Commandable SAL component (CSC) is the commander or not.
+
+        Returns
+        -------
+        `bool`
+            True if the CSC is the commander. False otherwise.
+        """
+        return self._status.command_source == CommandSource.CSC
+
+    async def enable_drives(self, status: bool, time: float = 1.0) -> None:
+        """Enable the drives.
+
+        Parameters
+        ----------
+        status : `bool`
+            True if enable the drives. Otherwise, False.
+        time : `float`, optional
+            Sleep time in second. (the default is 1.0)
+        """
+
+        self.assert_is_connected()
+
+        # Workaround the mypy check
+        assert self.client is not None
+
+        command = self.make_command(CommandCode.ENABLE_DRIVES, param1=float(status))
+        await self.client.run_command(command)
+
+        await asyncio.sleep(time)
+
+    def assert_is_connected(self) -> None:
+        """Assert that the client is connected.
+
+        Raises
+        ------
+        `RuntimeError`
+            When the client is not connected.
+        """
+
+        if not self.is_connected():
+            raise RuntimeError("Not connected to the low-level controller")
+
+    def make_command(
+        self,
+        code: CommandCode,
+        param1: float = 0.0,
+        param2: float = 0.0,
+        param3: float = 0.0,
+        param4: float = 0.0,
+        param5: float = 0.0,
+        param6: float = 0.0,
+    ) -> Command:
+        """Make a command from the command identifier and keyword arguments.
+
+        Parameters
+        ----------
+        code : enum `CommandCode`
+            Command to run.
+        param1, param2, param3, param4, param5, param6 : `double`, optional
+            Command parameters. The meaning of these parameters
+            depends on the command code.
+
+        Returns
+        -------
+        command : `lsst.ts.hexrotcomm.Command`
+            The command. Note that the `counter` field is 0;
+            it is set by `CommandTelemetryClient.run_command`.
+        """
+
+        command = Command()
+
+        # Set the commander to be GUI. See the enum "Commander" in
+        # ts_hexrotpxicom.
+        command.COMMANDER = 1
+
+        command.code = code.value
+        command.param1 = param1
+        command.param2 = param2
+        command.param3 = param3
+        command.param4 = param4
+        command.param5 = param5
+        command.param6 = param6
+
+        self.log.debug(
+            f"New command: {code.name} ({hex(code.value)}): {param1=}, "
+            f"{param2=}, {param3=}, {param4=}, {param5=}, {param6=}"
+        )
+
+        return command
+
+    def make_command_state(self, trigger_state: TriggerState) -> Command:
+        """Make the state command.
+
+        Parameters
+        ----------
+        trigger_state : enum `TriggerState`
+            Trigger state.
+
+        Returns
+        -------
+        `lsst.ts.hexrotcomm.Command`
+            State command.
+        """
+
+        if trigger_state == TriggerState.Enable:
+            return self.make_command(CommandCode.SET_STATE, param1=2.0)
+        elif trigger_state == TriggerState.StandBy:
+            return self.make_command(CommandCode.SET_STATE, param1=3.0)
+        else:
+            # Should be the TriggerState.ClearError
+            return self.make_command(CommandCode.SET_STATE, param1=6.0)
+
+    def make_command_enabled_substate(
+        self,
+        trigger_enabled_substate: TriggerEnabledSubState,
+    ) -> Command:
+        """Make the enabled substate command.
+
+        Parameters
+        ----------
+        trigger_enabled_substate : enum `TriggerEnabledSubState`
+            Trigger enabled substate.
+
+        Returns
+        -------
+        `lsst.ts.hexrotcomm.Command`
+            Enabled substate command.
+        """
+
+        if trigger_enabled_substate == TriggerEnabledSubState.Move:
+            return self.make_command(
+                CommandCode.SET_ENABLED_SUBSTATE,
+                param1=1.0,
+            )
+        elif trigger_enabled_substate == TriggerEnabledSubState.MoveConstantVel:
+            return self.make_command(
+                CommandCode.SET_ENABLED_SUBSTATE,
+                param1=6.0,
+            )
+        else:
+            # Should be the TriggerEnabledSubState.Stop
+            return self.make_command(CommandCode.SET_ENABLED_SUBSTATE, param1=3.0)
 
     def report_default(self) -> None:
         """Report the default status."""
@@ -126,7 +500,7 @@ class Model(object):
         signal_drive.status_word.emit([0] * NUM_STRUT)  # type: ignore[attr-defined]
         signal_drive.latching_fault.emit([0] * NUM_STRUT)  # type: ignore[attr-defined]
         signal_drive.copley_status.emit([0] * NUM_STRUT)  # type: ignore[attr-defined]
-        signal_drive.input_pin.emit([0] * NUM_STRUT)  # type: ignore[attr-defined]
+        signal_drive.input_pin.emit(0x300C0)  # type: ignore[attr-defined]
 
         signal_application_status = self.signals["application_status"]
         signal_application_status.status.emit(0)  # type: ignore[attr-defined]
@@ -137,6 +511,8 @@ class Model(object):
             [0.0] * NUM_STRUT, [0.0] * NUM_STRUT, [0.0] * NUM_STRUT, 0.0
         )
         self.report_position_velocity(0.0, 0.0, 0.0, 0.0)
+
+        self.report_power([0.0] * NUM_STRUT, 0.0)
 
     def report_config(self, config: Config) -> None:
         """Report the configuration.
@@ -286,6 +662,8 @@ class Model(object):
             signal.emit(value)
             setattr(self._status, field, value)
 
+            self.log.info(f"Update system status: {field} = {value}")
+
     def report_application_status(self, status: int, simulink_flag: int) -> None:
         """Report the application status.
 
@@ -311,7 +689,7 @@ class Model(object):
         status_word: list[int],
         latching_fault: list[int],
         copley_status: list[int],
-        input_pin: list[int],
+        input_pin: int,
     ) -> None:
         """Report the drive status.
 
@@ -323,8 +701,8 @@ class Model(object):
             Latching fault status of [axia_a, axis_b].
         copley_status : `list` [`int`]
             Copley drive status of [axia_a, axis_b].
-        input_pin : `list` [`int`]
-            Input pin status of [axia_a, axis_b].
+        input_pin : `int`
+            Input pin status.
         """
 
         signal = self.signals["drive"]
@@ -341,3 +719,18 @@ class Model(object):
         self._compare_status_and_report(
             "input_pin", input_pin, signal.input_pin  # type: ignore[attr-defined]
         )
+
+    async def __aenter__(self) -> object:
+        """This is an overridden function to support the asynchronous context
+        manager."""
+        return self
+
+    async def __aexit__(
+        self,
+        type: typing.Type[BaseException] | None,
+        value: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
+        """This is an overridden function to support the asynchronous context
+        manager."""
+        await self.disconnect()
