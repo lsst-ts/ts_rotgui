@@ -22,6 +22,28 @@ This package also supports the `conda <https://docs.conda.io/en/latest>`_ packag
 
 The badges above navigate to the GitHub repository for the tool code.
 
+.. _User_Documentation:
+
+User Documentation
+==================
+
+Observatory operators and other interested parties should consult the user guide for insights into the rotator GUI operations.
+
+.. toctree::
+    user-guide/user-guide
+    :maxdepth: 1
+
+.. _Error_Handling_Documentation:
+
+Error Handling Documentation
+============================
+
+The possible error of rotator and the related handling to recover the system are recorded here.
+
+.. toctree::
+    error-handling/error-handling
+    :maxdepth: 1
+
 .. _Development_Documentation:
 
 Development Documentation
