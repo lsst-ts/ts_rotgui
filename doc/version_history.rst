@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.4.1:
+
+-------------
+0.4.1
+-------------
+
+* Add the user guide and error handling documents.
+
 .. _lsst.ts.rotgui-0.4.0:
 
 -------------
