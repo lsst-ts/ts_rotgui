@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.4.2:
+
+-------------
+0.4.2
+-------------
+
+* Improve the ``setup.py`` to support the version of Python 3.11 and 3.12.
+
 .. _lsst.ts.rotgui-0.4.1:
 
 -------------
