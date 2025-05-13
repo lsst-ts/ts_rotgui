@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.4.3:
+
+-------------
+0.4.3
+-------------
+
+* Add the **QT_QPA_PLATFORM** to ``meta.yaml`` to fix the test section of conda recipe.
+
 .. _lsst.ts.rotgui-0.4.2:
 
 -------------
