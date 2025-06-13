@@ -1,5 +1,5 @@
 [build-system]
-requires = [ "setuptools", "setuptools_scm" ]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,7 +9,7 @@ This package is the rotator engineering user interface and provides a simple
 emulator for the rotator control system."""
 license = { text = "GPL" }
 classifiers = [ "Programming Language :: Python :: 3" ]
-urls = {documentation = "https://rubinobs.atlassian.net/secure/Dashboard.jspa", repository = "https://github.com/lsst-ts/ts_rotgui" }
+urls = {documentation = "https://ts-rotgui.lsst.io", repository = "https://github.com/lsst-ts/ts_rotgui" }
 dynamic = [ "version" ]
 dependencies = [
     "pyside6",
