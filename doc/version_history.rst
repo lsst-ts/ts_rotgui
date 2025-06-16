@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.4.4:
+
+-------------
+0.4.4
+-------------
+
+* Simplify the ``setup.py``.
+
 .. _lsst.ts.rotgui-0.4.3:
 
 -------------
