@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.4.5:
+
+-------------
+0.4.5
+-------------
+
+* Update the **ts-conda-build**.
+
 .. _lsst.ts.rotgui-0.4.4:
 
 -------------
