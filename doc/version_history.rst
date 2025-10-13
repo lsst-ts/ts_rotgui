@@ -6,6 +6,16 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.4.5:
+
+-------------
+0.4.5
+-------------
+
+* Update the **ts-conda-build**.
+* Improve the ``test_application.py``.
+* Assign the qasync version in ``meta.yaml``.
+
 .. _lsst.ts.rotgui-0.4.4:
 
 -------------
