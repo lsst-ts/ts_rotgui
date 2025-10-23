@@ -49,10 +49,7 @@ def test_init(widget: MainWindow) -> None:
     configuration = _get_config()
     assert connection_information["host"] == configuration["host"]
     assert connection_information["port"] == configuration["port"]
-    assert (
-        connection_information["timeout_connection"]
-        == configuration["connection_timeout"]
-    )
+    assert connection_information["timeout_connection"] == configuration["connection_timeout"]
 
 
 def _get_config() -> dict:

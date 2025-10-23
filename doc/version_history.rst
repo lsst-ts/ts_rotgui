@@ -6,6 +6,15 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.4.6:
+
+-------------
+0.4.6
+-------------
+
+* Adapt the qasync v0.28.0.
+* Reformat by ruff.
+
 .. _lsst.ts.rotgui-0.4.5:
 
 -------------

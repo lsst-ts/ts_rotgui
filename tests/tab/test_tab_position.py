@@ -38,7 +38,6 @@ def widget(qtbot: QtBot) -> TabPosition:
 
 @pytest.mark.asyncio
 async def test_callback_time_out(widget: TabPosition) -> None:
-
     widget._position = 1.0
     widget._velocity = 2.0
 
@@ -50,7 +49,6 @@ async def test_callback_time_out(widget: TabPosition) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_position_velocity(widget: TabPosition) -> None:
-
     widget.model.report_position_velocity(10.1, 20.2, 30.3, 40.4)
 
     # Sleep so the event loop can access CPU to handle the signal

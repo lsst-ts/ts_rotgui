@@ -225,37 +225,23 @@ class ControlPanel(QWidget):
         """
 
         command_state = QRadioButton("State command", parent=self)
-        command_enabled_substate = QRadioButton(
-            "Enabled sub-state command", parent=self
-        )
+        command_enabled_substate = QRadioButton("Enabled sub-state command", parent=self)
         command_position = QRadioButton("Position set command", parent=self)
         command_velocity = QRadioButton("Velocity set command", parent=self)
         command_commander = QRadioButton("Switch command source", parent=self)
         command_mask = QRadioButton("Mask limit switch", parent=self)
-        command_disable_upper = QRadioButton(
-            "Disable upper position limit", parent=self
-        )
-        command_disable_lower = QRadioButton(
-            "Disable lower position limit", parent=self
-        )
+        command_disable_upper = QRadioButton("Disable upper position limit", parent=self)
+        command_disable_lower = QRadioButton("Disable lower position limit", parent=self)
         command_config_velocity = QRadioButton("Configure velocity limit", parent=self)
-        command_config_acceleration = QRadioButton(
-            "Configure acceleration limit", parent=self
-        )
+        command_config_acceleration = QRadioButton("Configure acceleration limit", parent=self)
         command_config_jerk = QRadioButton("Configure jerk limit", parent=self)
-        command_config_emergency_acceleration = QRadioButton(
-            "Configure emergency acceleration", parent=self
-        )
-        command_config_emergency_jerk = QRadioButton(
-            "Configure emergency jerk", parent=self
-        )
+        command_config_emergency_acceleration = QRadioButton("Configure emergency acceleration", parent=self)
+        command_config_emergency_jerk = QRadioButton("Configure emergency jerk", parent=self)
 
         command_state.setToolTip("Transition the state.")
         command_enabled_substate.setToolTip("Transition the enabled sub-state.")
         command_position.setToolTip("Set the position in point-to-point movement.")
-        command_velocity.setToolTip(
-            "Set the velocity used in the constant velocity movement."
-        )
+        command_velocity.setToolTip("Set the velocity used in the constant velocity movement.")
         command_commander.setToolTip("Switch the command source (GUI or CSC).")
         command_mask.setToolTip("Temporarily mask the limit switches.")
         command_disable_upper.setToolTip("Disable the upper position limit.")
@@ -263,9 +249,7 @@ class ControlPanel(QWidget):
         command_config_velocity.setToolTip("Configure the velocity limit")
         command_config_acceleration.setToolTip("Configure the acceleration limit")
         command_config_jerk.setToolTip("Configure the jerk limit")
-        command_config_emergency_acceleration.setToolTip(
-            "Configure the emergency acceleration"
-        )
+        command_config_emergency_acceleration.setToolTip("Configure the emergency acceleration")
         command_config_emergency_jerk.setToolTip("Configure the emergency jerk")
 
         command_state.toggled.connect(self._callback_command)
@@ -369,16 +353,12 @@ class ControlPanel(QWidget):
         # Command the controller
         match name:
             case "state":
-                trigger_state = TriggerState(
-                    self._command_parameters["state"].currentIndex()
-                )
+                trigger_state = TriggerState(self._command_parameters["state"].currentIndex())
                 command = self.model.make_command_state(trigger_state)
 
             case "enabled_substate":
                 command = self.model.make_command_enabled_substate(
-                    TriggerEnabledSubState(
-                        self._command_parameters["enabled_substate"].currentIndex()
-                    ),
+                    TriggerEnabledSubState(self._command_parameters["enabled_substate"].currentIndex()),
                 )
 
             case "position":
@@ -397,11 +377,7 @@ class ControlPanel(QWidget):
             case "commander":
                 command = self.model.make_command(
                     CommandCode.CMD_SOURCE,
-                    param1=float(
-                        CommandSource(
-                            self._command_parameters["source"].currentIndex()
-                        ).value
-                    ),
+                    param1=float(CommandSource(self._command_parameters["source"].currentIndex()).value),
                 )
 
             case "mask":
@@ -471,16 +447,12 @@ class ControlPanel(QWidget):
                     await asyncio.sleep(1.0)
 
             case "disable_upper":
-                command_reset = self.model.make_command(
-                    CommandCode.DISABLE_UPPER_POS_LIMIT
-                )
+                command_reset = self.model.make_command(CommandCode.DISABLE_UPPER_POS_LIMIT)
                 await run_command(self.model.client.run_command, command_reset)
                 await asyncio.sleep(1.0)
 
             case "disable_lower":
-                command_reset = self.model.make_command(
-                    CommandCode.DISABLE_LOWER_POS_LIMIT
-                )
+                command_reset = self.model.make_command(CommandCode.DISABLE_LOWER_POS_LIMIT)
                 await run_command(self.model.client.run_command, command_reset)
                 await asyncio.sleep(1.0)
 
@@ -614,33 +586,21 @@ class ControlPanel(QWidget):
 
         layout_parameters_1 = QFormLayout()
         layout_parameters_1.addRow("State trigger:", self._command_parameters["state"])
-        layout_parameters_1.addRow(
-            "Enabled sub-state trigger:", self._command_parameters["enabled_substate"]
-        )
+        layout_parameters_1.addRow("Enabled sub-state trigger:", self._command_parameters["enabled_substate"])
         layout_parameters_1.addRow("Position:", self._command_parameters["position"])
         layout_parameters_1.addRow("Velocity:", self._command_parameters["velocity"])
         layout_parameters_1.addRow("Duration:", self._command_parameters["duration"])
-        layout_parameters_1.addRow(
-            "Command source:", self._command_parameters["source"]
-        )
+        layout_parameters_1.addRow("Command source:", self._command_parameters["source"])
 
         layout_parameters_2 = QFormLayout()
-        layout_parameters_2.addRow(
-            "Velocity limit:", self._command_parameters["limit_velocity"]
-        )
-        layout_parameters_2.addRow(
-            "Acceleration limit:", self._command_parameters["limit_acceleration"]
-        )
-        layout_parameters_2.addRow(
-            "Jerk limit:", self._command_parameters["limit_jerk"]
-        )
+        layout_parameters_2.addRow("Velocity limit:", self._command_parameters["limit_velocity"])
+        layout_parameters_2.addRow("Acceleration limit:", self._command_parameters["limit_acceleration"])
+        layout_parameters_2.addRow("Jerk limit:", self._command_parameters["limit_jerk"])
         layout_parameters_2.addRow(
             "Emergency acceleration:",
             self._command_parameters["emergency_acceleration"],
         )
-        layout_parameters_2.addRow(
-            "Emergency jerk:", self._command_parameters["emergency_jerk"]
-        )
+        layout_parameters_2.addRow("Emergency jerk:", self._command_parameters["emergency_jerk"])
 
         layout = QHBoxLayout()
         layout.addLayout(layout_parameters_1)
@@ -716,9 +676,7 @@ class ControlPanel(QWidget):
             Substate.
         """
 
-        self._labels["enabled_substate"].setText(
-            MTRotator.EnabledSubstate(substate).name
-        )
+        self._labels["enabled_substate"].setText(MTRotator.EnabledSubstate(substate).name)
 
     @asyncSlot()
     async def _callback_substate_fault(self, substate: int) -> None:
@@ -791,9 +749,7 @@ class ControlPanel(QWidget):
 
         self._command_parameters["limit_velocity"].setValue(config.velocity_limit)
         self._command_parameters["limit_acceleration"].setValue(config.accel_limit)
-        self._command_parameters["emergency_acceleration"].setValue(
-            config.emergency_accel_limit
-        )
+        self._command_parameters["emergency_acceleration"].setValue(config.emergency_accel_limit)
         self._command_parameters["emergency_jerk"].setValue(config.emergency_jerk_limit)
 
         self._update_drive_status(config.drives_enabled)
