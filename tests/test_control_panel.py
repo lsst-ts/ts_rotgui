@@ -48,7 +48,6 @@ def widget(qtbot: QtBot) -> ControlPanel:
 
 
 def test_init(widget: ControlPanel) -> None:
-
     assert widget._command_parameters["position"].maximum() == MAX_ROTATION
     assert widget._command_parameters["position"].minimum() == -MAX_ROTATION
 
@@ -56,15 +55,12 @@ def test_init(widget: ControlPanel) -> None:
     assert widget._command_parameters["velocity"].minimum() == -MAX_VELOCITY
 
     assert widget._command_parameters["limit_velocity"].maximum() == MAX_VELOCITY
-    assert (
-        widget._command_parameters["limit_acceleration"].maximum() == MAX_ACCELERATION
-    )
+    assert widget._command_parameters["limit_acceleration"].maximum() == MAX_ACCELERATION
     assert widget._command_parameters["limit_jerk"].maximum() == MAX_JERK
 
 
 @pytest.mark.asyncio
 async def test_callback_command(qtbot: QtBot, widget: ControlPanel) -> None:
-
     # Single command parameter
     qtbot.mouseClick(widget._commands["enabled_substate"], Qt.LeftButton)
 
@@ -91,7 +87,6 @@ async def test_callback_command(qtbot: QtBot, widget: ControlPanel) -> None:
 
 
 def test_get_selected_command(widget: ControlPanel) -> None:
-
     for name, command in widget._commands.items():
         command.setChecked(True)
 
@@ -99,7 +94,6 @@ def test_get_selected_command(widget: ControlPanel) -> None:
 
 
 def test_update_fault_status(widget: ControlPanel) -> None:
-
     widget._update_fault_status(True)
     assert widget._indicators["fault"].text() == "Faulted"
     assert widget._indicators["fault"].palette().color(QPalette.Button) == Qt.red
@@ -111,7 +105,6 @@ def test_update_fault_status(widget: ControlPanel) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_state(widget: ControlPanel) -> None:
-
     command_source = CommandSource.CSC
     state = MTRotator.ControllerState.FAULT
     enabled_substate = MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT
@@ -133,7 +126,6 @@ async def test_set_signal_state(widget: ControlPanel) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_position_velocity(widget: ControlPanel) -> None:
-
     widget.model.report_position_velocity(10.1, 20.2, 30.3, 40.4)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -145,7 +137,6 @@ async def test_set_signal_position_velocity(widget: ControlPanel) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_config(widget: ControlPanel) -> None:
-
     config = Config()
     config.velocity_limit = 0.1
     config.accel_limit = 0.2
@@ -168,7 +159,6 @@ async def test_set_signal_config(widget: ControlPanel) -> None:
 
 
 def test_update_drive_status(widget: ControlPanel) -> None:
-
     widget._update_drive_status(True)
     assert widget._indicators["drive"].text() == "On"
     assert widget._indicators["drive"].palette().color(QPalette.Button) == Qt.green

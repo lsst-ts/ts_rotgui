@@ -53,15 +53,10 @@ def test_init(widget: TabSettings) -> None:
     connection_information = widget.model.connection_information
     assert widget._settings["host"].text() == connection_information["host"]
     assert widget._settings["port"].value() == connection_information["port"]
-    assert (
-        widget._settings["timeout_connection"].value()
-        == connection_information["timeout_connection"]
-    )
+    assert widget._settings["timeout_connection"].value() == connection_information["timeout_connection"]
 
     assert widget._settings["log_level"].value() == widget.model.log.level
-    assert widget._settings["refresh_frequency"].value() == int(
-        1000 / widget.model.duration_refresh
-    )
+    assert widget._settings["refresh_frequency"].value() == int(1000 / widget.model.duration_refresh)
 
     app = QApplication.instance()
     assert widget._settings["point_size"].value() == app.font().pointSize()
@@ -76,10 +71,7 @@ def test_init(widget: TabSettings) -> None:
 
     line_edit = widget._settings["host"]
     font_metrics = line_edit.fontMetrics()
-    assert (
-        line_edit.minimumWidth()
-        == font_metrics.boundingRect(line_edit.text()).width() + 20
-    )
+    assert line_edit.minimumWidth() == font_metrics.boundingRect(line_edit.text()).width() + 20
 
     assert widget._settings["refresh_frequency"].minimum() == REFRESH_FREQUENCY_MINIMUM
     assert widget._settings["refresh_frequency"].maximum() == REFRESH_FREQUENCY_MAXIMUM

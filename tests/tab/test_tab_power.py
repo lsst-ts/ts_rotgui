@@ -38,7 +38,6 @@ def widget(qtbot: QtBot) -> TabPower:
 
 @pytest.mark.asyncio
 async def test_callback_time_out(widget: TabPower) -> None:
-
     widget._currents = [1.0, 2.0]
     widget._voltage = 3.0
 
@@ -52,7 +51,6 @@ async def test_callback_time_out(widget: TabPower) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_power(widget: TabPower) -> None:
-
     widget.model.report_power([10.1, 20.2], 30.3)
 
     # Sleep so the event loop can access CPU to handle the signal

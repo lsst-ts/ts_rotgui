@@ -101,7 +101,6 @@ class TabTelemetry(TabTemplate):
         self._set_signal_power(self.model.signals["power"])  # type: ignore[arg-type]
 
     def create_layout(self) -> QVBoxLayout:
-
         layout_telemetry = QVBoxLayout()
         layout_telemetry.addWidget(self._create_group_position())
         layout_telemetry.addWidget(self._create_group_control_data())
@@ -197,9 +196,7 @@ class TabTelemetry(TabTemplate):
         """
 
         layout = QFormLayout()
-        layout.addRow(
-            "Time frame difference:", self._telemetry["time_frame_difference"]
-        )
+        layout.addRow("Time frame difference:", self._telemetry["time_frame_difference"])
 
         return create_group_box("Time Data", layout)
 
@@ -310,9 +307,7 @@ class TabTelemetry(TabTemplate):
         self._telemetry["application_status_word"].setText(hex(status))
 
         faults = [0, 5, 6, 7, 8, 9, 11, 13, 14, 15]
-        self._update_boolean_indicators(
-            status, self._indicators["application_status"], faults
-        )
+        self._update_boolean_indicators(status, self._indicators["application_status"], faults)
 
     def _update_boolean_indicators(
         self, status: int, indicators: list[QRadioButton], faults: list[int]
@@ -358,9 +353,7 @@ class TabTelemetry(TabTemplate):
         """
 
         faults = [5, 8, 9, 10]
-        self._update_boolean_indicators(
-            status, self._indicators["simulink_flag"], faults
-        )
+        self._update_boolean_indicators(status, self._indicators["simulink_flag"], faults)
 
     def _set_signal_control(self, signal: SignalControl) -> None:
         """Set the control signal.

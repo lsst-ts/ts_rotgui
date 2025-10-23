@@ -62,9 +62,7 @@ class TabPosition(TabTemplate):
         self.model = model
 
         # Timer to update the realtime figures
-        self._timer = self.create_and_start_timer(
-            self._callback_time_out, self.model.duration_refresh
-        )
+        self._timer = self.create_and_start_timer(self._callback_time_out, self.model.duration_refresh)
 
         self.set_widget_and_layout()
 
@@ -115,7 +113,6 @@ class TabPosition(TabTemplate):
         self.check_duration_and_restart_timer(self._timer, self.model.duration_refresh)
 
     def create_layout(self) -> QVBoxLayout:
-
         layout = QVBoxLayout()
         for figure in self._figures.values():
             figure.setMinimumWidth(self.MIN_WIDTH)

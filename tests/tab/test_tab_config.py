@@ -38,7 +38,6 @@ def widget(qtbot: QtBot) -> TabConfig:
 
 @pytest.mark.asyncio
 async def test_set_signal_config(widget: TabConfig) -> None:
-
     config = Config()
     config.velocity_limit = 1.1
     config.accel_limit = 2.2
@@ -68,12 +67,7 @@ async def test_set_signal_config(widget: TabConfig) -> None:
     assert widget._configuration["tracking_success_threshold"].text() == "7.7 deg"
     assert widget._configuration["tracking_lost_timeout"].text() == "8.8 sec"
     assert widget._configuration["emergency_jerk_limit"].text() == "9.9 deg/sec^3"
-    assert (
-        widget._configuration["emergency_acceleration_limit"].text() == "10.1 deg/sec^2"
-    )
+    assert widget._configuration["emergency_acceleration_limit"].text() == "10.1 deg/sec^2"
     assert widget._configuration["disable_limit_max_time"].text() == "11.1 sec"
     assert widget._configuration["max_velocity_limit"].text() == "12.2 deg/sec"
-    assert (
-        widget._configuration["drives_enabled"].text()
-        == "<font color='green'>True</font>"
-    )
+    assert widget._configuration["drives_enabled"].text() == "<font color='green'>True</font>"

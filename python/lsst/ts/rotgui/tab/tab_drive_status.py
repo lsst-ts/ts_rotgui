@@ -92,7 +92,6 @@ class TabDriveStatus(TabTemplate):
         self._set_signal_drive(self.model.signals["drive"])  # type: ignore[arg-type]
 
     def create_layout(self) -> QVBoxLayout:
-
         # First column
         layout_drive = QVBoxLayout()
         layout_drive.addWidget(self._create_group_status_word())
@@ -146,9 +145,7 @@ class TabDriveStatus(TabTemplate):
             ),
         )
 
-    def _combine_indicators(
-        self, list_indicators: list[list[QRadioButton]]
-    ) -> list[QHBoxLayout]:
+    def _combine_indicators(self, list_indicators: list[list[QRadioButton]]) -> list[QHBoxLayout]:
         """Combine the indicators.
 
         Parameters
@@ -177,9 +174,7 @@ class TabDriveStatus(TabTemplate):
 
         return combined_indicators
 
-    def _create_form_layout(
-        self, names: list[str], items: list[QWidget | QLayout]
-    ) -> QFormLayout:
+    def _create_form_layout(self, names: list[str], items: list[QWidget | QLayout]) -> QFormLayout:
         """Create a form layout.
 
         Parameters
@@ -502,9 +497,7 @@ class TabDriveStatus(TabTemplate):
         # If there is the hit of limit switch, the pin state is "Low" instead
         # of "High".
         reversed_bits = [1, 2]
-        for offset, axis in zip(
-            [bit_offset_first, bit_offset_second], ["axis_a", "axis_b"]
-        ):
+        for offset, axis in zip([bit_offset_first, bit_offset_second], ["axis_a", "axis_b"]):
             self._update_boolean_indicators(
                 input_pin >> offset,
                 self._list_input_pin_state[axis],

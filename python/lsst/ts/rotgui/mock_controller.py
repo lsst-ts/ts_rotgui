@@ -59,7 +59,6 @@ class MockController(BaseMockController):
         port: int = 0,
         initial_state: MTRotator.ControllerState = MTRotator.ControllerState.STANDBY,
     ) -> None:
-
         extra_commands = {
             (
                 CommandCode.SET_ENABLED_SUBSTATE,
@@ -163,9 +162,7 @@ class MockController(BaseMockController):
             raise RuntimeError("Must set the position first.")
 
         self.telemetry.demand_pos = self._commanded_position
-        self.telemetry.enabled_substate = (
-            MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT
-        )
+        self.telemetry.enabled_substate = MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT
 
     async def do_stop(self, command: Command) -> None:
         """Stop the movement.
@@ -282,9 +279,7 @@ class MockController(BaseMockController):
 
         self.assert_stationary()
 
-        self._check_positive_value(
-            command.param1, "emergency acceleration", MAX_ACCELERATION
-        )
+        self._check_positive_value(command.param1, "emergency acceleration", MAX_ACCELERATION)
 
         self.config.emergency_accel_limit = command.param1
         await self.write_config()
@@ -305,10 +300,7 @@ class MockController(BaseMockController):
         self.config.emergency_jerk_limit = command.param1
         await self.write_config()
 
-    async def end_run_command(
-        self, command: Command, cmd_method: typing.Coroutine
-    ) -> None:
-
+    async def end_run_command(self, command: Command, cmd_method: typing.Coroutine) -> None:
         if cmd_method != self.do_position_set:
             self._commanded_position = None
 
@@ -327,32 +319,20 @@ class MockController(BaseMockController):
             self.telemetry.status_word_drive0_axis_b = status_word
 
             # Application status
-            self.telemetry.application_status = (
-                MTRotator.ApplicationStatus.EUI_CONNECTED
-            )
+            self.telemetry.application_status = MTRotator.ApplicationStatus.EUI_CONNECTED
             if self._is_csc_commander:
-                self.telemetry.application_status |= (
-                    MTRotator.ApplicationStatus.DDS_COMMAND_SOURCE
-                )
+                self.telemetry.application_status |= MTRotator.ApplicationStatus.DDS_COMMAND_SOURCE
 
             # Power
             self.telemetry.motor_current = (
-                (self.STRUT_CURRENT,) * NUM_STRUT
-                if self.config.drives_enabled
-                else (0.0,) * NUM_STRUT
+                (self.STRUT_CURRENT,) * NUM_STRUT if self.config.drives_enabled else (0.0,) * NUM_STRUT
             )
             self.telemetry.bus_voltage = self.BUS_VOLTAGE
 
             # Rotator position
-            if (
-                self.telemetry.enabled_substate
-                == MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT
-            ):
+            if self.telemetry.enabled_substate == MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT:
                 # Do the movement
-                velocity = (
-                    np.sign(self.telemetry.demand_pos - self.telemetry.current_pos)
-                    * MAX_VELOCITY
-                )
+                velocity = np.sign(self.telemetry.demand_pos - self.telemetry.current_pos) * MAX_VELOCITY
                 is_done, new_position = self._move_position(
                     self.telemetry.current_pos,
                     self.telemetry.demand_pos,
@@ -365,9 +345,7 @@ class MockController(BaseMockController):
 
                 # Change the substate if the movement is done
                 if is_done:
-                    self.telemetry.enabled_substate = (
-                        MTRotator.EnabledSubstate.STATIONARY
-                    )
+                    self.telemetry.enabled_substate = MTRotator.EnabledSubstate.STATIONARY
                     self._commanded_position = None
 
         except Exception:

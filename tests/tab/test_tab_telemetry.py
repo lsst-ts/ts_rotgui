@@ -39,14 +39,12 @@ def widget(qtbot: QtBot) -> TabTelemetry:
 
 
 def test_init(widget: TabTelemetry) -> None:
-
     assert len(widget._indicators["application_status"]) == 16
     assert len(widget._indicators["simulink_flag"]) == 11
 
 
 @pytest.mark.asyncio
 async def test_set_signal_application_status(widget: TabTelemetry) -> None:
-
     widget.model.report_application_status(0xFFFF, 0x7FF)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -67,7 +65,6 @@ async def test_set_signal_application_status(widget: TabTelemetry) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_control(widget: TabTelemetry) -> None:
-
     widget.model.report_control_data([11.1, 22.2], [33.3, 44.4], [55.5, 66.6], 77.7)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -87,7 +84,6 @@ async def test_set_signal_control(widget: TabTelemetry) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_position_velocity(widget: TabTelemetry) -> None:
-
     widget.model.report_position_velocity(10.1, 20.2, 30.3, 40.4)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -99,7 +95,6 @@ async def test_set_signal_position_velocity(widget: TabTelemetry) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_power(widget: TabTelemetry) -> None:
-
     widget.model.report_power([1.1, 2.2], 3.3)
 
     # Sleep so the event loop can access CPU to handle the signal

@@ -39,7 +39,6 @@ def widget(qtbot: QtBot) -> TabDriveStatus:
 
 
 def test_init(widget: TabDriveStatus) -> None:
-
     assert len(widget._list_status_word["axis_a"]) == 16
     assert len(widget._list_latching_fault_status["axis_a"]) == 16
     assert len(widget._list_copley_status["axis_a"]) == 32
@@ -48,7 +47,6 @@ def test_init(widget: TabDriveStatus) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_drive(widget: TabDriveStatus) -> None:
-
     # Triggered
     widget.model.report_drive_status(
         [0xFFFF] * NUM_STRUT,
@@ -87,15 +85,10 @@ async def test_set_signal_drive(widget: TabDriveStatus) -> None:
                 assert indicator.palette().color(QPalette.Base) == Qt.green
 
     # Not triggered
-    widget.model.report_drive_status(
-        [0] * NUM_STRUT, [0] * NUM_STRUT, [0] * NUM_STRUT, 0
-    )
+    widget.model.report_drive_status([0] * NUM_STRUT, [0] * NUM_STRUT, [0] * NUM_STRUT, 0)
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
     for axis in ["axis_a", "axis_b"]:
-        assert (
-            widget._list_input_pin_state[axis][0].palette().color(QPalette.Base)
-            == Qt.red
-        )
+        assert widget._list_input_pin_state[axis][0].palette().color(QPalette.Base) == Qt.red

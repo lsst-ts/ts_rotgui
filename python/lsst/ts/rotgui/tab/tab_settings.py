@@ -91,17 +91,11 @@ class TabSettings(TabTemplate):
         settings["timeout_connection"].setSuffix(" sec")
 
         settings["log_level"].setRange(LOG_LEVEL_MINIMUM, LOG_LEVEL_MAXIMUM)
-        settings["log_level"].setToolTip(
-            "CRITICAL (50), ERROR (40), WARNING (30), INFO (20), DEBUG (10)"
-        )
+        settings["log_level"].setToolTip("CRITICAL (50), ERROR (40), WARNING (30), INFO (20), DEBUG (10)")
 
-        settings["refresh_frequency"].setRange(
-            REFRESH_FREQUENCY_MINIMUM, REFRESH_FREQUENCY_MAXIMUM
-        )
+        settings["refresh_frequency"].setRange(REFRESH_FREQUENCY_MINIMUM, REFRESH_FREQUENCY_MAXIMUM)
         settings["refresh_frequency"].setSuffix(" Hz")
-        settings["refresh_frequency"].setToolTip(
-            "Frequency to refresh the data on tables"
-        )
+        settings["refresh_frequency"].setToolTip("Frequency to refresh the data on tables")
 
         settings["point_size"].setRange(POINT_SIZE_MINIMUM, POINT_SIZE_MAXIMUM)
         settings["point_size"].setToolTip("Point size of the application.")
@@ -110,9 +104,7 @@ class TabSettings(TabTemplate):
         connection_information = self.model.connection_information
         settings["host"].setText(connection_information["host"])
         settings["port"].setValue(connection_information["port"])
-        settings["timeout_connection"].setValue(
-            connection_information["timeout_connection"]
-        )
+        settings["timeout_connection"].setValue(connection_information["timeout_connection"])
 
         settings["log_level"].setValue(self.model.log.level)
 
@@ -127,9 +119,7 @@ class TabSettings(TabTemplate):
 
         return settings
 
-    def _set_minimum_width_line_edit(
-        self, line_edit: QLineEdit, offset: int = 20
-    ) -> None:
+    def _set_minimum_width_line_edit(self, line_edit: QLineEdit, offset: int = 20) -> None:
         """Set the minimum width of line edit.
 
         Parameters
@@ -157,9 +147,7 @@ class TabSettings(TabTemplate):
         """
 
         apply_host = set_button("Apply Host Settings", self._callback_apply_host)
-        apply_general = set_button(
-            "Apply General Settings", self._callback_apply_general
-        )
+        apply_general = set_button("Apply General Settings", self._callback_apply_general)
 
         return {
             "apply_host": apply_host,
@@ -174,9 +162,7 @@ class TabSettings(TabTemplate):
         connection_information = self.model.connection_information
         connection_information["host"] = self._settings["host"].text()
         connection_information["port"] = self._settings["port"].value()
-        connection_information["timeout_connection"] = self._settings[
-            "timeout_connection"
-        ].value()
+        connection_information["timeout_connection"] = self._settings["timeout_connection"].value()
 
     @asyncSlot()
     async def _callback_apply_general(self) -> None:
@@ -186,9 +172,7 @@ class TabSettings(TabTemplate):
         self.model.log.setLevel(self._settings["log_level"].value())
 
         # The unit of self.model.duration_refresh is milliseconds
-        self.model.duration_refresh = int(
-            1000 / self._settings["refresh_frequency"].value()
-        )
+        self.model.duration_refresh = int(1000 / self._settings["refresh_frequency"].value())
 
         # Update the point size
         app = QApplication.instance()
@@ -197,7 +181,6 @@ class TabSettings(TabTemplate):
         app.setFont(font)
 
     def create_layout(self) -> QVBoxLayout:
-
         layout = QVBoxLayout()
         layout.addWidget(self._create_group_tcpip())
         layout.addWidget(self._create_group_application())
