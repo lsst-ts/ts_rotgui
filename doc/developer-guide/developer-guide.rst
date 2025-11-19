@@ -85,6 +85,7 @@ rotgui.tab
 * **TabTelemetry** shows the telemetry of controller.
 * **TabPower** shows the power status.
 * **TabConfig** shows the configuration.
+* **TabTarget** shows the tracking targets.
 
 The class diagrams for each table class are listed below to give you the idea of class relationship.
 
@@ -135,6 +136,12 @@ rotgui.tab.Config
 
 .. mermaid:: ../uml/tab/class_tab_config.mmd
     :caption: Class diagram of TabConfig class
+
+rotgui.tab.Target
+--------------------
+
+.. mermaid:: ../uml/tab/class_tab_target.mmd
+    :caption: Class diagram of TabTarget class
 
 .. _API:
 
