@@ -27,7 +27,9 @@ import types
 import typing
 
 from lsst.ts.hexrotcomm import Command, CommandTelemetryClient
+from lsst.ts.simactuators import RampGenerator
 from lsst.ts.tcpip import LOCALHOST_IPV4
+from lsst.ts.utils import make_done_future, current_tai
 from lsst.ts.xml.enums import MTRotator
 from PySide6.QtCore import Signal
 
@@ -45,6 +47,13 @@ from .signals import (
 )
 from .status import Status
 from .structs import Config, Telemetry
+
+
+# How far in advance to set the time field of tracking commands (seconds)
+TRACK_ADVANCE_TIME = 0.15
+
+# Interval between tracking commands (seconds).
+TRACK_INTERVAL = 0.05
 
 
 class Model(object):
@@ -115,6 +124,9 @@ class Model(object):
 
         self.client: CommandTelemetryClient | None = None
 
+        # Task to track the targets.
+        self._track_task = make_done_future()
+
     def is_connected(self) -> bool:
         """Check if the client is connected.
 
@@ -184,6 +196,9 @@ class Model(object):
         # Close the client
         if self.is_connected():
             try:
+                # Stop the running asyncio task
+                self._stop_track_task()
+
                 # Workaround the mypy check
                 assert self.client is not None
 
@@ -203,6 +218,12 @@ class Model(object):
                 self.log.exception("disconnect: self._mock_ctrl.close() failed")
 
         self._mock_ctrl = None
+
+    def _stop_track_task(self) -> None:
+        """Stop the track task."""
+
+        if not self._track_task.done():
+            self._track_task.cancel()
 
     async def connect_callback(self, client: CommandTelemetryClient) -> None:
         """Called when the client socket connects or disconnects.
@@ -435,6 +456,8 @@ class Model(object):
             State command.
         """
 
+        self._stop_track_task()
+
         if trigger_state == TriggerState.Enable:
             return self.make_command(CommandCode.SET_STATE, param1=2.0)
         elif trigger_state == TriggerState.StandBy:
@@ -446,6 +469,7 @@ class Model(object):
     def make_command_enabled_substate(
         self,
         trigger_enabled_substate: TriggerEnabledSubState,
+        targets: list[list[float]] | None = None,
     ) -> Command:
         """Make the enabled substate command.
 
@@ -453,6 +477,10 @@ class Model(object):
         ----------
         trigger_enabled_substate : enum `TriggerEnabledSubState`
             Trigger enabled substate.
+        targets : `list` [`list`] or None, optional
+            List of targets: [position, velocity, duration]. The unit of
+            position is degrees, velocity is degrees/second, and duration is
+            seconds. (the default is None)
 
         Returns
         -------
@@ -460,19 +488,111 @@ class Model(object):
             Enabled substate command.
         """
 
-        if trigger_enabled_substate == TriggerEnabledSubState.Move:
-            return self.make_command(
-                CommandCode.SET_ENABLED_SUBSTATE,
-                param1=1.0,
+        match trigger_enabled_substate:
+            case TriggerEnabledSubState.Move:
+                param1 = 1.0
+            case TriggerEnabledSubState.MoveConstantVel:
+                param1 = 6.0
+            case TriggerEnabledSubState.Track:
+                self._stop_track_task()
+
+                # Workaround the mypy check
+                assert targets is not None
+
+                self._track_task = asyncio.create_task(self._track_targets(targets))
+
+                param1 = 2.0
+            case _:
+                # Should be the TriggerEnabledSubState.Stop
+                self._stop_track_task()
+                param1 = 3.0
+
+        return self.make_command(
+            CommandCode.SET_ENABLED_SUBSTATE,
+            param1=param1,
+        )
+
+    async def _track_targets(self, targets: list[list[float]]) -> None:
+        """Track the targets.
+
+        Parameters
+        ----------
+        targets : `list` [`list`]
+            List of targets: [position, velocity, duration]. The unit of
+            position is degrees, velocity is degrees/second, and duration is
+            seconds.
+        """
+
+        # Workaround the mypy check
+        assert self.client is not None
+
+        self.log.info("Start to track the targets.")
+
+        while self._status.substate_enabled != MTRotator.EnabledSubstate.SLEWING_OR_TRACKING:
+            await asyncio.sleep(TRACK_INTERVAL)
+
+        self.log.info("The controller is in the tracking substate.")
+
+        # Track the targets
+        try:
+            for target in targets:
+                position, velocity, duration = target
+                await self._ramp(position, position + velocity * duration, velocity)
+
+            # Stop the tracking in the end
+            stop_command = self.make_command(CommandCode.SET_ENABLED_SUBSTATE, param1=3.0)
+            await self.client.run_command(stop_command)
+
+        except asyncio.CancelledError:
+            self.log.info("Tracking task is cancelled")
+
+        except Exception as error:
+            self.log.info(f"Tracking task is failed: {error!r}")
+
+        self.log.info("End to track the targets.")
+
+    async def _ramp(self, start_position: float, end_position: float, speed: float) -> None:
+        """Track a linear ramp.
+
+        Parameters
+        ----------
+        start_position : `float`
+            Starting position of ramp (deg).
+        end_position : `float`
+            Ending position of ramp (deg).
+        speed : `float`
+            Speed of motion along the ramp (deg/sec).
+        """
+
+        # Workaround the mypy check
+        assert self.client is not None
+
+        ramp_generator = RampGenerator(
+            start_positions=[start_position],
+            end_positions=[end_position],
+            speeds=[speed],
+            advance_time=TRACK_ADVANCE_TIME,
+        )
+        self.log.info(
+            f"Track a ramp from {start_position} to {end_position} at speed {speed}; "
+            f"this will take {ramp_generator.duration:0.2f} seconds"
+        )
+
+        for positions, velocities, tai in ramp_generator():
+            t0 = current_tai()
+
+            track_command = self.make_command(
+                CommandCode.TRACK_VEL_CMD,
+                param1=tai,
+                param2=positions[0],
+                param3=velocities[0],
             )
-        elif trigger_enabled_substate == TriggerEnabledSubState.MoveConstantVel:
-            return self.make_command(
-                CommandCode.SET_ENABLED_SUBSTATE,
-                param1=6.0,
-            )
-        else:
-            # Should be the TriggerEnabledSubState.Stop
-            return self.make_command(CommandCode.SET_ENABLED_SUBSTATE, param1=3.0)
+            await self.client.run_command(track_command)
+
+            dt = current_tai() - t0
+            sleep_duration = max(0, TRACK_INTERVAL - dt)
+
+            await asyncio.sleep(sleep_duration)
 
     def report_default(self) -> None:
         """Report the default status."""
