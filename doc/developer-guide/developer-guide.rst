@@ -16,6 +16,8 @@ Dependencies
 * `ts_tcpip <https://github.com/lsst-ts/ts_tcpip>`_
 * `ts_salobj <https://github.com/lsst-ts/ts_salobj>`_
 * `ts_hexrotcomm <https://github.com/lsst-ts/ts_hexrotcomm>`_
+* `ts_utils <https://github.com/lsst-ts/ts_utils>`_
+* `ts_simactuators <https://github.com/lsst-ts/ts_simactuators>`_
 
 .. _Architecture:
 

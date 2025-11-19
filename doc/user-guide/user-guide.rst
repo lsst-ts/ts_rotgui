@@ -113,7 +113,7 @@ Some important commands are listed below:
 
 #. State command lets you change the controller's state between **Standby** and **Enabled** states. If there is the fault, you can clear the error here.
 
-#. Enabled-sub-state command lets you move the rotator once setting the rotator's position, do the constant velocity movement, or stop the rotator's movement.
+#. Enabled-sub-state command lets you move the rotator once setting the rotator's position, do the constant velocity movement, track the target, or stop the rotator's movement.
 
 #. Switch-command-source command sets the command source to be GUI or CSC.
 
