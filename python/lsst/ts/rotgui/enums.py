@@ -60,6 +60,7 @@ class TriggerEnabledSubState(IntEnum):
     Move = 0  # Parameter to controller is 1
     Stop = auto()  # Parameter to controller is 3
     MoveConstantVel = auto()  # Parameter to controller is 6
+    Track = auto()  # Parameter to controller is 2
 
 
 class CommandCode(IntEnum):

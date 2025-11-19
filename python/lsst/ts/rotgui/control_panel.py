@@ -50,6 +50,7 @@ from .enums import CommandCode, CommandSource, TriggerEnabledSubState, TriggerSt
 from .model import Model
 from .signals import SignalConfig, SignalPositionVelocity, SignalState
 from .structs import Config
+from .tab import TabTarget
 
 
 class ControlPanel(QWidget):
@@ -82,6 +83,8 @@ class ControlPanel(QWidget):
             "odometer": create_label(),
             "position": create_label(),
         }
+
+        self._tab_target = TabTarget("Tracking Targets", self.model)
 
         self._command_parameters = self._create_command_parameters()
         self._commands = self._create_commands()
@@ -200,6 +203,10 @@ class ControlPanel(QWidget):
         for source in CommandSource:
             command_source.addItem(source.name)
 
+        button_target = set_button(
+            "Tracking Targets", self._tab_target.show, tool_tip="Set the tracking targets."
+        )
+
         return {
             "state": state,
             "enabled_substate": enabled_substate,
@@ -212,6 +219,7 @@ class ControlPanel(QWidget):
             "velocity": velocity,
             "duration": duration,
             "source": command_source,
+            "target": button_target,
         }
 
     def _create_commands(self) -> dict:
@@ -228,6 +236,7 @@ class ControlPanel(QWidget):
         command_enabled_substate = QRadioButton("Enabled sub-state command", parent=self)
         command_position = QRadioButton("Position set command", parent=self)
         command_velocity = QRadioButton("Velocity set command", parent=self)
+        command_target = QRadioButton("Target set command", parent=self)
         command_commander = QRadioButton("Switch command source", parent=self)
         command_mask = QRadioButton("Mask limit switch", parent=self)
         command_disable_upper = QRadioButton("Disable upper position limit", parent=self)
@@ -242,6 +251,7 @@ class ControlPanel(QWidget):
         command_enabled_substate.setToolTip("Transition the enabled sub-state.")
         command_position.setToolTip("Set the position in point-to-point movement.")
         command_velocity.setToolTip("Set the velocity used in the constant velocity movement.")
+        command_target.setToolTip("Set the tracking targets in the tracking movement.")
         command_commander.setToolTip("Switch the command source (GUI or CSC).")
         command_mask.setToolTip("Temporarily mask the limit switches.")
         command_disable_upper.setToolTip("Disable the upper position limit.")
@@ -256,6 +266,7 @@ class ControlPanel(QWidget):
         command_enabled_substate.toggled.connect(self._callback_command)
         command_position.toggled.connect(self._callback_command)
         command_velocity.toggled.connect(self._callback_command)
+        command_target.toggled.connect(self._callback_command)
         command_commander.toggled.connect(self._callback_command)
         command_mask.toggled.connect(self._callback_command)
         command_disable_upper.toggled.connect(self._callback_command)
@@ -271,6 +282,7 @@ class ControlPanel(QWidget):
             "enabled_substate": command_enabled_substate,
             "position": command_position,
             "velocity": command_velocity,
+            "target": command_target,
             "commander": command_commander,
             "mask": command_mask,
             "disable_upper": command_disable_upper,
@@ -297,6 +309,9 @@ class ControlPanel(QWidget):
 
         elif self._commands["velocity"].isChecked():
             self._enable_command_parameters(["velocity", "duration"])
+
+        elif self._commands["target"].isChecked():
+            self._enable_command_parameters(["target"])
 
         elif self._commands["commander"].isChecked():
             self._enable_command_parameters(["source"])
@@ -357,8 +372,18 @@ class ControlPanel(QWidget):
                 command = self.model.make_command_state(trigger_state)
 
             case "enabled_substate":
+                trigger_enabled_substate = TriggerEnabledSubState(
+                    self._command_parameters["enabled_substate"].currentIndex()
+                )
+                targets = (
+                    self._tab_target.get_targets()
+                    if (trigger_enabled_substate == TriggerEnabledSubState.Track)
+                    else None
+                )
+
                 command = self.model.make_command_enabled_substate(
-                    TriggerEnabledSubState(self._command_parameters["enabled_substate"].currentIndex()),
+                    trigger_enabled_substate,
+                    targets=targets,
                 )
 
             case "position":
@@ -590,9 +615,10 @@ class ControlPanel(QWidget):
         layout_parameters_1.addRow("Position:", self._command_parameters["position"])
         layout_parameters_1.addRow("Velocity:", self._command_parameters["velocity"])
         layout_parameters_1.addRow("Duration:", self._command_parameters["duration"])
-        layout_parameters_1.addRow("Command source:", self._command_parameters["source"])
+        layout_parameters_1.addRow("Target:", self._command_parameters["target"])
 
         layout_parameters_2 = QFormLayout()
+        layout_parameters_2.addRow("Command source:", self._command_parameters["source"])
         layout_parameters_2.addRow("Velocity limit:", self._command_parameters["limit_velocity"])
         layout_parameters_2.addRow("Acceleration limit:", self._command_parameters["limit_acceleration"])
         layout_parameters_2.addRow("Jerk limit:", self._command_parameters["limit_jerk"])
