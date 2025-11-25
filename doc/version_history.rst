@@ -6,6 +6,19 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.5.0:
+
+-------------
+0.5.0
+-------------
+
+* Add the dependencis of **ts_utils** and **ts_simactuators**.
+* Add the ``tab_target.py``.
+* Support the tracking of targets.
+* Update the UML diagrams.
+* Add the ``documenteer.toml``.
+* Update the ``Jenkinsfile.conda`` to remove the ``use_pyside6`` option, which is the default value.
+
 .. _lsst.ts.rotgui-0.4.6:
 
 -------------

@@ -16,6 +16,8 @@ Dependencies
 * `ts_tcpip <https://github.com/lsst-ts/ts_tcpip>`_
 * `ts_salobj <https://github.com/lsst-ts/ts_salobj>`_
 * `ts_hexrotcomm <https://github.com/lsst-ts/ts_hexrotcomm>`_
+* `ts_utils <https://github.com/lsst-ts/ts_utils>`_
+* `ts_simactuators <https://github.com/lsst-ts/ts_simactuators>`_
 
 .. _Architecture:
 
@@ -85,6 +87,7 @@ rotgui.tab
 * **TabTelemetry** shows the telemetry of controller.
 * **TabPower** shows the power status.
 * **TabConfig** shows the configuration.
+* **TabTarget** shows the tracking targets.
 
 The class diagrams for each table class are listed below to give you the idea of class relationship.
 
@@ -135,6 +138,12 @@ rotgui.tab.Config
 
 .. mermaid:: ../uml/tab/class_tab_config.mmd
     :caption: Class diagram of TabConfig class
+
+rotgui.tab.Target
+--------------------
+
+.. mermaid:: ../uml/tab/class_tab_target.mmd
+    :caption: Class diagram of TabTarget class
 
 .. _API:
 

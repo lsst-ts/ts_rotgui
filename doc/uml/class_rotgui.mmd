@@ -11,9 +11,11 @@ namespace guitool {
 
 namespace tab {
   class TabSettings
+  class TabTarget
 }
 
 TabTemplate <|-- TabSettings
+TabTemplate <|-- TabTarget
 
 MainWindow *-- Model
 MainWindow *-- ControlTabs
@@ -33,10 +35,13 @@ Model *-- SignalConfig : emit()
 Model ..> Config
 
 ControlPanel *-- Model
+ControlPanel *-- TabTarget
 ControlPanel --> SignalState : connect()
 ControlPanel --> SignalPositionVelocity : connect()
 ControlPanel --> SignalConfig : connect()
 
 TabSettings *-- Model
+
+TabTarget *-- Model
 
 ControlTabs "1" *-- "5" TabTemplate

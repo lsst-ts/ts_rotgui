@@ -88,6 +88,21 @@ async def test_command_move_point_to_point(model_async: Model) -> None:
 
 
 @pytest.mark.asyncio
+async def test_command_track(model_async: Model) -> None:
+    await _enable_controller(model_async)
+
+    track_command = model_async.make_command_enabled_substate(
+        TriggerEnabledSubState.Track,
+        targets=[[5.0, 0.1, 2.0]],
+    )
+    await model_async.client.run_command(track_command)
+
+    await asyncio.sleep(5.0)
+
+    assert model_async._mock_ctrl.telemetry.current_pos == 5.2
+
+
+@pytest.mark.asyncio
 async def _enable_controller(model_async: Model) -> None:
     command = model_async.make_command_state(TriggerState.Enable)
     await model_async.client.run_command(command)

@@ -37,6 +37,8 @@ test:
     - ts-tcpip
     - ts-salobj
     - ts-hexrotcomm
+    - ts-utils
+    - ts-simactuators
   source_files:
     - python
     - bin
@@ -78,3 +80,5 @@ requirements:
     - ts-tcpip
     - ts-salobj
     - ts-hexrotcomm
+    - ts-utils
+    - ts-simactuators

@@ -7,6 +7,8 @@ setupRequired(ts_guitool)
 setupRequired(ts_tcpip)
 setupRequired(ts_salobj)
 setupRequired(ts_hexrotcomm)
+setupRequired(ts_utils)
+setupRequired(ts_simactuators)
 
 envPrepend(PATH, ${PRODUCT_DIR}/bin)
 

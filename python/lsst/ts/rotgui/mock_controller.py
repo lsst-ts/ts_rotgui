@@ -66,6 +66,10 @@ class MockController(BaseMockController):
             ): self.do_move_point_to_point,
             (
                 CommandCode.SET_ENABLED_SUBSTATE,
+                2,  # Track in the controller
+            ): self.do_track,
+            (
+                CommandCode.SET_ENABLED_SUBSTATE,
                 3,  # Stop in the controller
             ): self.do_stop,
             (
@@ -73,6 +77,7 @@ class MockController(BaseMockController):
                 6,  # Constant velocity movement in the controller
             ): self.do_not_supported_command,
             CommandCode.POSITION_SET: self.do_position_set,
+            CommandCode.TRACK_VEL_CMD: self.do_track_target,
             CommandCode.SET_CONSTANT_VEL: self.do_not_supported_command,
             CommandCode.MASK_LIMIT_SW: self.do_not_supported_command,
             CommandCode.DISABLE_UPPER_POS_LIMIT: self.do_not_supported_command,
@@ -101,6 +106,9 @@ class MockController(BaseMockController):
         # Commanded rotator's position in degree.
         # If None, no position has been commanded.
         self._commanded_position: float | None = None
+
+        # Tracking velocity
+        self._track_velocity = 0.0
 
     def _create_config(self) -> Config:
         """Create the configuration.
@@ -164,6 +172,19 @@ class MockController(BaseMockController):
         self.telemetry.demand_pos = self._commanded_position
         self.telemetry.enabled_substate = MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT
 
+    async def do_track(self, command: Command) -> None:
+        """Do the track movement.
+
+        Parameters
+        ----------
+        command : `Command`
+            Command.
+        """
+
+        self.assert_stationary()
+
+        self.telemetry.enabled_substate = MTRotator.EnabledSubstate.SLEWING_OR_TRACKING
+
     async def do_stop(self, command: Command) -> None:
         """Stop the movement.
 
@@ -187,6 +208,23 @@ class MockController(BaseMockController):
         self.assert_stationary()
 
         self._commanded_position = command.param1
+
+    async def do_track_target(self, command: Command) -> None:
+        """Do the tracking of target.
+
+        Parameters
+        ----------
+        command : `Command`
+            Command.
+        """
+
+        self.assert_state(
+            MTRotator.ControllerState.ENABLED,
+            enabled_substate=MTRotator.EnabledSubstate.SLEWING_OR_TRACKING,
+        )
+
+        self.telemetry.demand_pos = command.param2
+        self._track_velocity = command.param3
 
     async def do_not_supported_command(self, command: Command) -> None:
         """Not supported command.
@@ -304,6 +342,9 @@ class MockController(BaseMockController):
         if cmd_method != self.do_position_set:
             self._commanded_position = None
 
+        if cmd_method != self.do_track_target:
+            self._track_velocity = 0.0
+
     async def update_telemetry(self, curr_tai: float) -> None:
         try:
             # Copley drive status
@@ -330,7 +371,10 @@ class MockController(BaseMockController):
             self.telemetry.bus_voltage = self.BUS_VOLTAGE
 
             # Rotator position
-            if self.telemetry.enabled_substate == MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT:
+            if self.telemetry.enabled_substate in (
+                MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT,
+                MTRotator.EnabledSubstate.SLEWING_OR_TRACKING,
+            ):
                 # Do the movement
                 velocity = np.sign(self.telemetry.demand_pos - self.telemetry.current_pos) * MAX_VELOCITY
                 is_done, new_position = self._move_position(
@@ -340,13 +384,21 @@ class MockController(BaseMockController):
                 )
 
                 self.telemetry.current_pos = new_position
-                self.telemetry.current_vel_ch_a_fb = 0.0 if is_done else velocity
-                self.telemetry.current_vel_ch_b_fb = 0.0 if is_done else velocity
 
-                # Change the substate if the movement is done
+                final_velocity = velocity
                 if is_done:
-                    self.telemetry.enabled_substate = MTRotator.EnabledSubstate.STATIONARY
-                    self._commanded_position = None
+                    if self.telemetry.enabled_substate == MTRotator.EnabledSubstate.MOVING_POINT_TO_POINT:
+                        final_velocity = 0.0
+
+                        # Change the substate if the movement is done
+                        self.telemetry.enabled_substate = MTRotator.EnabledSubstate.STATIONARY
+                        self._commanded_position = None
+
+                    elif self.telemetry.enabled_substate == MTRotator.EnabledSubstate.SLEWING_OR_TRACKING:
+                        final_velocity = self._track_velocity
+
+                self.telemetry.current_vel_ch_a_fb = final_velocity
+                self.telemetry.current_vel_ch_b_fb = final_velocity
 
         except Exception:
             self.log.exception("update_telemetry failed; output incomplete telemetry")
