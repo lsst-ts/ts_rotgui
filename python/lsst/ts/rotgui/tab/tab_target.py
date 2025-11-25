@@ -49,7 +49,8 @@ from ..model import Model
 
 
 class TabTarget(TabTemplate):
-    """Table of the tracking target.
+    """Widget containing QTableWidget with buttons to add and remove tracking
+    targets (position, velocity, duration).
 
     Parameters
     ----------
@@ -79,7 +80,7 @@ class TabTarget(TabTemplate):
         self.set_widget_and_layout()
 
     def _create_table_target(self) -> QTableWidget:
-        """Create the table widget of tracking target.
+        """Create the tracking target's table widget.
 
         Returns
         -------
@@ -89,28 +90,15 @@ class TabTarget(TabTemplate):
 
         header_text = ["Position (deg)", "Velocity (deg/s)", "Duration (s)"]
         table = create_table(header_text)
+        table.verticalHeader().hide()
 
         header = table.horizontalHeader()
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
 
         return table
 
-    def _create_target_parameters(
-        self,
-        decimal_position: int = 2,
-        decimal_velocity: int = 4,
-        decimal_duration: int = 1,
-    ) -> dict[str, QDoubleSpinBox]:
+    def _create_target_parameters(self) -> dict[str, QDoubleSpinBox]:
         """Create the target parameters.
-
-        Parameters
-        ----------
-        decimal_position : `int`, optional
-            Number of decimal position for the position. (the default is 2)
-        decimal_velocity : `int`, optional
-            Number of decimal position for the velocity. (the default is 4)
-        decimal_duration : `int`, optional
-            Number of decimal position for the duration. (the default is 1)
 
         Returns
         -------
@@ -118,6 +106,7 @@ class TabTarget(TabTemplate):
             Target parameters.
         """
 
+        decimal_position = 2
         position = create_double_spin_box(
             "deg",
             decimal_position,
@@ -125,6 +114,7 @@ class TabTarget(TabTemplate):
             minimum=-MAX_ROTATION,
         )
 
+        decimal_velocity = 4
         velocity = create_double_spin_box(
             "deg/sec",
             decimal_velocity,
@@ -132,6 +122,7 @@ class TabTarget(TabTemplate):
             minimum=-MAX_VELOCITY,
         )
 
+        decimal_duration = 1
         duration = create_double_spin_box("sec", decimal_duration)
 
         return {
@@ -194,7 +185,7 @@ class TabTarget(TabTemplate):
         if velocity == 0:
             await prompt_dialog_warning(
                 function_name,
-                "Velocity must be different from zero.",
+                "Velocity should not equal zero.",
                 is_prompted=is_prompted,
             )
 
