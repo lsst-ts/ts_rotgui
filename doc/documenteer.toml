@@ -15,5 +15,5 @@ extensions = ["sphinx-jsonschema"]
 
 [sphinx.intersphinx.projects]
 ts-xml = "https://ts-xml.lsst.io"
-salobj = "https://ts-salobj.lsst.io"
+ts-salobj = "https://ts-salobj.lsst.io"
 python = "https://docs.python.org/3.13/"
