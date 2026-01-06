@@ -23,8 +23,9 @@ __all__ = ["run_rotgui"]
 
 import asyncio
 
-from lsst.ts.guitool import base_frame_run_application
 from PySide6.QtCore import QCommandLineOption, QCommandLineParser
+
+from lsst.ts.guitool import base_frame_run_application
 
 from .main_window import MainWindow
 

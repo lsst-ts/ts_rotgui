@@ -24,6 +24,8 @@ import logging
 
 import pytest
 import pytest_asyncio
+from pytestqt.qtbot import QtBot
+
 from lsst.ts import salobj
 from lsst.ts.rotgui import (
     NUM_STRUT,
@@ -36,7 +38,6 @@ from lsst.ts.rotgui import (
     TriggerState,
 )
 from lsst.ts.xml.enums import MTRotator
-from pytestqt.qtbot import QtBot
 
 TIMEOUT = 1000
 

@@ -22,11 +22,12 @@
 import asyncio
 
 import pytest
-from lsst.ts.guitool import get_config_dir, read_yaml_file
-from lsst.ts.rotgui import MainWindow
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QToolBar
 from pytestqt.qtbot import QtBot
+
+from lsst.ts.guitool import get_config_dir, read_yaml_file
+from lsst.ts.rotgui import MainWindow
 
 
 @pytest.fixture

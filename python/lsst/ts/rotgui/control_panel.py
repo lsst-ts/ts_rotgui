@@ -23,16 +23,6 @@ __all__ = ["ControlPanel"]
 
 import asyncio
 
-from lsst.ts.guitool import (
-    ButtonStatus,
-    create_double_spin_box,
-    create_group_box,
-    create_label,
-    run_command,
-    set_button,
-    update_button_color,
-)
-from lsst.ts.xml.enums import MTRotator
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QComboBox,
@@ -44,6 +34,17 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.guitool import (
+    ButtonStatus,
+    create_double_spin_box,
+    create_group_box,
+    create_label,
+    run_command,
+    set_button,
+    update_button_color,
+)
+from lsst.ts.xml.enums import MTRotator
 
 from .constants import MAX_ACCELERATION, MAX_JERK, MAX_ROTATION, MAX_VELOCITY
 from .enums import CommandCode, CommandSource, TriggerEnabledSubState, TriggerState
