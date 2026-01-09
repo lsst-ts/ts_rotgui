@@ -23,11 +23,12 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.rotgui import NUM_STRUT, Model
-from lsst.ts.rotgui.tab import TabDriveStatus
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
+
+from lsst.ts.rotgui import NUM_STRUT, Model
+from lsst.ts.rotgui.tab import TabDriveStatus
 
 
 @pytest.fixture

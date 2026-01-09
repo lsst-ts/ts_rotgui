@@ -26,12 +26,13 @@ import logging
 import types
 import typing
 
+from PySide6.QtCore import Signal
+
 from lsst.ts.hexrotcomm import Command, CommandTelemetryClient
 from lsst.ts.simactuators import RampGenerator
 from lsst.ts.tcpip import LOCALHOST_IPV4
-from lsst.ts.utils import make_done_future, current_tai
+from lsst.ts.utils import current_tai, make_done_future
 from lsst.ts.xml.enums import MTRotator
-from PySide6.QtCore import Signal
 
 from .constants import NUM_STRUT
 from .enums import CommandCode, CommandSource, TriggerEnabledSubState, TriggerState
@@ -47,7 +48,6 @@ from .signals import (
 )
 from .status import Status
 from .structs import Config, Telemetry
-
 
 # How far in advance to set the time field of tracking commands (seconds)
 TRACK_ADVANCE_TIME = 0.15

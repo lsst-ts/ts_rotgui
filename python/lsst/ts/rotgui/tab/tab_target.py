@@ -22,27 +22,28 @@
 __all__ = ["TabTarget"]
 
 
-from lsst.ts.guitool import (
-    create_table,
-    create_group_box,
-    create_double_spin_box,
-    set_button,
-    TabTemplate,
-    prompt_dialog_warning,
-)
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QHeaderView,
+    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QPushButton,
-    QGroupBox,
 )
 from qasync import asyncSlot
+
+from lsst.ts.guitool import (
+    TabTemplate,
+    create_double_spin_box,
+    create_group_box,
+    create_table,
+    prompt_dialog_warning,
+    set_button,
+)
 
 from ..constants import MAX_ROTATION, MAX_VELOCITY
 from ..model import Model

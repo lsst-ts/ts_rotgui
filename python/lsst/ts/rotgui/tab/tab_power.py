@@ -21,9 +21,10 @@
 
 __all__ = ["TabPower"]
 
-from lsst.ts.guitool import FigureConstant, TabTemplate
 from PySide6.QtWidgets import QVBoxLayout
 from qasync import asyncSlot
+
+from lsst.ts.guitool import FigureConstant, TabTemplate
 
 from ..constants import NUM_STRUT
 from ..model import Model

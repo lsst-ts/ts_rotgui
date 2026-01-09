@@ -6,6 +6,15 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.5.1:
+
+-------------
+0.5.1
+-------------
+
+- Fix the ruff format.
+- Update the **documenteer.toml**.
+
 .. _lsst.ts.rotgui-0.5.0:
 
 -------------

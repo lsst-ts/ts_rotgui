@@ -23,9 +23,10 @@ import asyncio
 import logging
 
 import pytest
+from pytestqt.qtbot import QtBot
+
 from lsst.ts.rotgui import Model
 from lsst.ts.rotgui.tab import TabPosition
-from pytestqt.qtbot import QtBot
 
 
 @pytest.fixture

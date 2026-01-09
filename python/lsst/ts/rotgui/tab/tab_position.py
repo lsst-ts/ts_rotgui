@@ -21,9 +21,10 @@
 
 __all__ = ["TabPosition"]
 
-from lsst.ts.guitool import FigureConstant, TabTemplate
 from PySide6.QtWidgets import QVBoxLayout
 from qasync import asyncSlot
+
+from lsst.ts.guitool import FigureConstant, TabTemplate
 
 from ..model import Model
 from ..signals import SignalPositionVelocity

@@ -21,10 +21,11 @@
 
 __all__ = ["TabConfig"]
 
-from lsst.ts.guitool import TabTemplate, create_group_box, create_label
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFormLayout, QGroupBox, QVBoxLayout
 from qasync import asyncSlot
+
+from lsst.ts.guitool import TabTemplate, create_group_box, create_label
 
 from ..model import Model
 from ..signals import SignalConfig

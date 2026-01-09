@@ -25,6 +25,7 @@ import logging
 import typing
 
 import numpy as np
+
 from lsst.ts.hexrotcomm import BaseMockController, Command
 from lsst.ts.xml.enums import MTRotator
 

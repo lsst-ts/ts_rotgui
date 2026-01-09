@@ -21,6 +21,9 @@
 
 __all__ = ["TabSettings"]
 
+from PySide6.QtWidgets import QFormLayout, QGroupBox, QLineEdit, QSpinBox, QVBoxLayout
+from qasync import QApplication, asyncSlot
+
 from lsst.ts.guitool import (
     LOG_LEVEL_MAXIMUM,
     LOG_LEVEL_MINIMUM,
@@ -35,8 +38,6 @@ from lsst.ts.guitool import (
     create_group_box,
     set_button,
 )
-from PySide6.QtWidgets import QFormLayout, QGroupBox, QLineEdit, QSpinBox, QVBoxLayout
-from qasync import QApplication, asyncSlot
 
 from ..model import Model
 
