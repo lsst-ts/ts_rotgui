@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.5.2:
+
+-------------
+0.5.2
+-------------
+
+- Add and update the license header.
+
 .. _lsst.ts.rotgui-0.5.1:
 
 -------------
