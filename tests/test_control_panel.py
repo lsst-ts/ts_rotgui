@@ -23,6 +23,7 @@ import asyncio
 import logging
 
 import pytest
+import pytest_asyncio
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
@@ -40,7 +41,7 @@ from lsst.ts.rotgui import (
 from lsst.ts.xml.enums import MTRotator
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def widget(qtbot: QtBot) -> ControlPanel:
     widget = ControlPanel(Model(logging.getLogger()))
     qtbot.addWidget(widget)
