@@ -37,12 +37,11 @@ def widget(qtbot: QtBot) -> TabPower:
     return widget
 
 
-@pytest.mark.asyncio
-async def test_callback_time_out(widget: TabPower) -> None:
+def test_callback_time_out(widget: TabPower) -> None:
     widget._currents = [1.0, 2.0]
     widget._voltage = 3.0
 
-    await widget._callback_time_out()
+    widget._callback_time_out()
 
     assert widget._figures["current"].get_points(0)[-1].y() == 1.0
     assert widget._figures["current"].get_points(1)[-1].y() == 2.0

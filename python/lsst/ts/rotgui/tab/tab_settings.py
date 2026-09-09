@@ -21,8 +21,8 @@
 
 __all__ = ["TabSettings"]
 
-from PySide6.QtWidgets import QFormLayout, QGroupBox, QLineEdit, QSpinBox, QVBoxLayout
-from qasync import QApplication, asyncSlot
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QApplication, QFormLayout, QGroupBox, QLineEdit, QSpinBox, QVBoxLayout
 
 from lsst.ts.guitool import (
     LOG_LEVEL_MAXIMUM,
@@ -155,8 +155,8 @@ class TabSettings(TabTemplate):
             "apply_general": apply_general,
         }
 
-    @asyncSlot()
-    async def _callback_apply_host(self) -> None:
+    @Slot()
+    def _callback_apply_host(self) -> None:
         """Callback of the apply-host-setting button. This will apply the
         new host settings to model."""
 
@@ -165,8 +165,8 @@ class TabSettings(TabTemplate):
         connection_information["port"] = self._settings["port"].value()
         connection_information["timeout_connection"] = self._settings["timeout_connection"].value()
 
-    @asyncSlot()
-    async def _callback_apply_general(self) -> None:
+    @Slot()
+    def _callback_apply_general(self) -> None:
         """Callback of the apply-general-settings button. This will apply the
         new general settings to model."""
 

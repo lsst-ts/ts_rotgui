@@ -23,6 +23,7 @@ __all__ = ["ControlPanel"]
 
 import asyncio
 
+from PySide6.QtCore import Slot
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QComboBox,
@@ -33,7 +34,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from qasync import asyncSlot
 
 from lsst.ts.guitool import (
     ButtonStatus,
@@ -295,8 +295,8 @@ class ControlPanel(QWidget):
             "config_emergency_jerk": command_config_emergency_jerk,
         }
 
-    @asyncSlot()
-    async def _callback_command(self) -> None:
+    @Slot()
+    def _callback_command(self) -> None:
         """Callback of the command button."""
 
         if self._commands["state"].isChecked():
@@ -353,7 +353,6 @@ class ControlPanel(QWidget):
         for name, value in self._command_parameters.items():
             value.setEnabled(name in enabled_parameters)
 
-    @asyncSlot()
     async def _callback_send_command(self) -> None:
         """Callback of the send-command button to command the controller."""
 
@@ -649,8 +648,8 @@ class ControlPanel(QWidget):
         signal.substate_enabled.connect(self._callback_substate_enabled)
         signal.substate_fault.connect(self._callback_substate_fault)
 
-    @asyncSlot()
-    async def _callback_command_source(self, source: int) -> None:
+    @Slot(int)
+    def _callback_command_source(self, source: int) -> None:
         """Callback of the controller's command source signal.
 
         Parameters
@@ -661,8 +660,8 @@ class ControlPanel(QWidget):
 
         self._labels["source"].setText(CommandSource(source).name)
 
-    @asyncSlot()
-    async def _callback_state(self, state: int) -> None:
+    @Slot(int)
+    def _callback_state(self, state: int) -> None:
         """Callback of the controller's state signal.
 
         Parameters
@@ -693,8 +692,8 @@ class ControlPanel(QWidget):
         status = ButtonStatus.Error if is_fault else ButtonStatus.Normal
         update_button_color(self._indicators["fault"], QPalette.Button, status)
 
-    @asyncSlot()
-    async def _callback_substate_enabled(self, substate: int) -> None:
+    @Slot(int)
+    def _callback_substate_enabled(self, substate: int) -> None:
         """Callback of the controller's enabled substate signal.
 
         Parameters
@@ -705,8 +704,8 @@ class ControlPanel(QWidget):
 
         self._labels["enabled_substate"].setText(MTRotator.EnabledSubstate(substate).name)
 
-    @asyncSlot()
-    async def _callback_substate_fault(self, substate: int) -> None:
+    @Slot(int)
+    def _callback_substate_fault(self, substate: int) -> None:
         """Callback of the controller's fault substate signal.
 
         Parameters
@@ -729,8 +728,8 @@ class ControlPanel(QWidget):
         signal.position_current.connect(self._callback_position_current)
         signal.odometer.connect(self._callback_odometer)
 
-    @asyncSlot()
-    async def _callback_position_current(self, position: float) -> None:
+    @Slot(float)
+    def _callback_position_current(self, position: float) -> None:
         """Callback of the current position.
 
         Parameters
@@ -741,8 +740,8 @@ class ControlPanel(QWidget):
 
         self._labels["position"].setText(f"{position:.7f}")
 
-    @asyncSlot()
-    async def _callback_odometer(self, odometer: float) -> None:
+    @Slot(float)
+    def _callback_odometer(self, odometer: float) -> None:
         """Callback of the odometer.
 
         Parameters
@@ -764,8 +763,8 @@ class ControlPanel(QWidget):
 
         signal.config.connect(self._callback_config)
 
-    @asyncSlot()
-    async def _callback_config(self, config: Config) -> None:
+    @Slot(object)
+    def _callback_config(self, config: Config) -> None:
         """Callback of the configuration.
 
         Parameters

@@ -24,8 +24,8 @@ import logging
 
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
-from qasync import QApplication
 
 from lsst.ts.guitool import (
     LOG_LEVEL_MAXIMUM,

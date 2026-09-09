@@ -21,19 +21,18 @@
 
 __all__ = ["MainWindow"]
 
+import asyncio
 import logging
 import pathlib
 import sys
 from datetime import datetime
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMainWindow, QToolBar, QVBoxLayout, QWidget
-from qasync import QApplication, asyncSlot
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QToolBar, QVBoxLayout, QWidget
 
 from lsst.ts.guitool import (
     ControlTabs,
-    QMessageBoxAsync,
     get_button_action,
     get_config_dir,
     prompt_dialog_critical,
@@ -264,17 +263,21 @@ class MainWindow(QMainWindow):
         action_exit = tool_bar.addAction("Exit", self._callback_exit)
         action_exit.setToolTip("Exit the application (this might take some time)")
 
-        action_connect = tool_bar.addAction("Connect", self._callback_connect)
+        action_connect = tool_bar.addAction(
+            "Connect", lambda: asyncio.ensure_future(self._callback_connect())
+        )
         action_connect.setToolTip("Connect to the rotator controller")
 
-        action_disconnect = tool_bar.addAction("Disconnect", self._callback_disconnect)
+        action_disconnect = tool_bar.addAction(
+            "Disconnect", lambda: asyncio.ensure_future(self._callback_disconnect())
+        )
         action_disconnect.setToolTip("Disconnect and close all tasks (this might take some time)")
 
         action_settings = tool_bar.addAction("Settings", self._callback_settings)
         action_settings.setToolTip("Show the application settings")
 
-    @asyncSlot()
-    async def _callback_exit(self) -> None:
+    @Slot()
+    def _callback_exit(self) -> None:
         """Exit the application.
 
         The 'exit' action will be disabled during the call. If the user cancels
@@ -285,7 +288,7 @@ class MainWindow(QMainWindow):
         action_exit.setEnabled(False)
 
         if self.model.is_connected():
-            await prompt_dialog_warning(
+            prompt_dialog_warning(
                 "_callback_exit()",
                 (
                     "The controller is still connected. Please disconnect "
@@ -295,9 +298,9 @@ class MainWindow(QMainWindow):
 
         else:
             dialog = self._create_dialog_exit()
-            result = await dialog.show()
+            result = dialog.exec()
 
-            if result == QMessageBoxAsync.Ok:
+            if result == QMessageBox.Ok:
                 QApplication.instance().quit()
 
         action_exit.setEnabled(True)
@@ -319,30 +322,29 @@ class MainWindow(QMainWindow):
         tool_bar = self.findChildren(QToolBar)[0]
         return get_button_action(tool_bar, name)
 
-    def _create_dialog_exit(self) -> QMessageBoxAsync:
+    def _create_dialog_exit(self) -> QMessageBox:
         """Create the exit dialog.
 
         Returns
         -------
-        dialog : `lsst.ts.guitool.QMessageBoxAsync`
+        dialog : `PySide6.QtWidgets.QMessageBox`
             Exit dialog.
         """
 
-        dialog = QMessageBoxAsync()
-        dialog.setIcon(QMessageBoxAsync.Warning)
+        dialog = QMessageBox()
+        dialog.setIcon(QMessageBox.Warning)
         dialog.setWindowTitle("exit")
 
         dialog.setText("Exit the application?")
-        dialog.addButton(QMessageBoxAsync.Ok)
+        dialog.addButton(QMessageBox.Ok)
 
-        dialog.addButton(QMessageBoxAsync.Cancel)
+        dialog.addButton(QMessageBox.Cancel)
 
         # Block the user to interact with other running widgets
         dialog.setModal(True)
 
         return dialog
 
-    @asyncSlot()
     async def _callback_connect(self) -> None:
         """Callback function to connect to the controller."""
 
@@ -350,21 +352,20 @@ class MainWindow(QMainWindow):
         action_connect.setEnabled(False)
 
         if self.model.is_connected():
-            await prompt_dialog_warning("_callback_connect()", "The controller is already connected.")
+            prompt_dialog_warning("_callback_connect()", "The controller is already connected.")
 
         else:
             try:
                 await run_command(self.model.connect)
 
             except Exception as error:
-                await prompt_dialog_critical(
+                prompt_dialog_critical(
                     "_callback_connect",
                     f"Cannot connect to the controller - {error}",
                 )
 
         action_connect.setEnabled(True)
 
-    @asyncSlot()
     async def _callback_disconnect(self) -> None:
         """Callback function to disconnect from the controller.
 
@@ -378,9 +379,9 @@ class MainWindow(QMainWindow):
         # If the commander is not CSC, notify the user.
         if self.model.is_connected() and (not self.model.is_csc_commander()):
             dialog = self._create_dialog_disconnect()
-            result = await dialog.show()
+            result = dialog.exec()
 
-            if result == QMessageBoxAsync.Cancel:
+            if result == QMessageBox.Cancel:
                 return
 
         action_connect = self._get_action("Connect")
@@ -398,17 +399,17 @@ class MainWindow(QMainWindow):
         action_disconnect.setEnabled(True)
         action_exit.setEnabled(True)
 
-    def _create_dialog_disconnect(self) -> QMessageBoxAsync:
+    def _create_dialog_disconnect(self) -> QMessageBox:
         """Create the disconnect dialog.
 
         Returns
         -------
-        dialog : `lsst.ts.guitool.QMessageBoxAsync`
+        dialog : `PySide6.QtWidgets.QMessageBox`
             Disconnect dialog.
         """
 
-        dialog = QMessageBoxAsync()
-        dialog.setIcon(QMessageBoxAsync.Warning)
+        dialog = QMessageBox()
+        dialog.setIcon(QMessageBox.Warning)
         dialog.setWindowTitle("disconnect")
 
         dialog.setText(
@@ -417,16 +418,16 @@ class MainWindow(QMainWindow):
             "Do you want to continue the disconnection?"
         )
 
-        dialog.addButton(QMessageBoxAsync.Ok)
-        dialog.addButton(QMessageBoxAsync.Cancel)
+        dialog.addButton(QMessageBox.Ok)
+        dialog.addButton(QMessageBox.Cancel)
 
         # Block the user to interact with other running widgets
         dialog.setModal(True)
 
         return dialog
 
-    @asyncSlot()
-    async def _callback_settings(self) -> None:
+    @Slot()
+    def _callback_settings(self) -> None:
         """Callback function to show the settings."""
 
         self._tab_settings.show()

@@ -50,9 +50,7 @@ The `Qt signal <https://doc.qt.io/qt-6/signalsandslots.html>`_ is used to do the
 The `emit()` and `connect()` in the class diagrams mean the class **emits** a specific signal and **connects** it to a specific callback function.
 Signals are held and emitted from the **Model** to simplify the management of signals.
 
-Qt provides its event loop that is different from the event loop in Python `asyncio <https://docs.python.org/3/library/asyncio.html>`_ library.
-The `qasync <https://github.com/CabbageDevelopment/qasync>`_ allows coroutines (`async/await` keywords) to be used in PyQt/PySide applications by providing an implementation of the PEP-3156 event-loop.
-For the other tasks in a loop to run, an awaitable must be called from another coroutine.
+For the asynchronous tasks in a loop to run, an awaitable must be called from another coroutine.
 This allow for the coroutine to claim CPU and performs its operations.
 Therefore `await asyncio.sleep()` calls are placed in unit tests calls, so the signal handling etc. can occur.
 

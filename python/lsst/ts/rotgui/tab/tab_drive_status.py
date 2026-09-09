@@ -21,6 +21,7 @@
 
 __all__ = ["TabDriveStatus"]
 
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -30,7 +31,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from qasync import asyncSlot
 
 from lsst.ts.guitool import (
     TabTemplate,
@@ -334,8 +334,8 @@ class TabDriveStatus(TabTemplate):
         signal.copley_status.connect(self._callback_copley_status)
         signal.input_pin.connect(self._callback_input_pin)
 
-    @asyncSlot()
-    async def _callback_status_word(self, status_word: list[int]) -> None:
+    @Slot(object)
+    def _callback_status_word(self, status_word: list[int]) -> None:
         """Callback of the status word.
 
         Parameters
@@ -407,8 +407,8 @@ class TabDriveStatus(TabTemplate):
                 is_default_error=(idx in default_errors),
             )
 
-    @asyncSlot()
-    async def _callback_latching_fault(self, latching_fault: list[int]) -> None:
+    @Slot(object)
+    def _callback_latching_fault(self, latching_fault: list[int]) -> None:
         """Callback of the latching fault.
 
         Parameters
@@ -441,8 +441,8 @@ class TabDriveStatus(TabTemplate):
             [],
         )
 
-    @asyncSlot()
-    async def _callback_copley_status(self, copley_status: list[int]) -> None:
+    @Slot(object)
+    def _callback_copley_status(self, copley_status: list[int]) -> None:
         """Callback of the Copley drive status.
 
         Parameters
@@ -476,8 +476,8 @@ class TabDriveStatus(TabTemplate):
             [],
         )
 
-    @asyncSlot()
-    async def _callback_input_pin(self, input_pin: int) -> None:
+    @Slot(int)
+    def _callback_input_pin(self, input_pin: int) -> None:
         """Callback of the input pin status.
 
         Parameters

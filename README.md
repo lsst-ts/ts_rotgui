@@ -2,8 +2,8 @@
 
 ## Platform
 
-- AlmaLinux 8.10
-- python: 3.11.9
+- AlmaLinux 9
+- python: 3.14.7
 
 ## Needed Package
 
@@ -13,7 +13,6 @@
 - qt6-charts (install by `conda`)
 - qt5-qtbase-devel (install by `dnf`)
 - xorg-x11-server-Xvfb (optional, install by `dnf`)
-- qasync (install by `conda -c conda-forge`)
 - [black](https://github.com/psf/black) (optional)
 - [flake8](https://github.com/PyCQA/flake8) (optional)
 - [isort](https://github.com/PyCQA/isort) (optional)

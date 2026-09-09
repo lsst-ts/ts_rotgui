@@ -22,7 +22,7 @@
 __all__ = ["TabTarget"]
 
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
@@ -34,7 +34,6 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QVBoxLayout,
 )
-from qasync import asyncSlot
 
 from lsst.ts.guitool import (
     TabTemplate,
@@ -157,8 +156,8 @@ class TabTarget(TabTemplate):
 
         return buttons
 
-    @asyncSlot()
-    async def _callback_add_target(self, is_prompted: bool = True) -> None:
+    @Slot()
+    def _callback_add_target(self, is_prompted: bool = True) -> None:
         """Callback to add a new target.
 
         Parameters
@@ -173,7 +172,7 @@ class TabTarget(TabTemplate):
         duration = self._target_parameters["duration"].value()
         function_name = "_callback_add_target()"
         if duration <= 0:
-            await prompt_dialog_warning(
+            prompt_dialog_warning(
                 function_name,
                 "Duration must be greater than zero.",
                 is_prompted=is_prompted,
@@ -184,7 +183,7 @@ class TabTarget(TabTemplate):
         # Check the velocity should be !=0
         velocity = self._target_parameters["velocity"].value()
         if velocity == 0:
-            await prompt_dialog_warning(
+            prompt_dialog_warning(
                 function_name,
                 "Velocity should not equal zero.",
                 is_prompted=is_prompted,
@@ -220,8 +219,8 @@ class TabTarget(TabTemplate):
 
         return item
 
-    @asyncSlot()
-    async def _callback_remove_target(self) -> None:
+    @Slot()
+    def _callback_remove_target(self) -> None:
         """Callback to remove the selected target."""
 
         # When removing the items, remove from the bottom to the top to avoid
@@ -231,8 +230,8 @@ class TabTarget(TabTemplate):
         for row in rows:
             self._table_target.removeRow(row)
 
-    @asyncSlot()
-    async def _callback_clear_targets(self) -> None:
+    @Slot()
+    def _callback_clear_targets(self) -> None:
         """Callback to clear all targets."""
 
         self._table_target.setRowCount(0)

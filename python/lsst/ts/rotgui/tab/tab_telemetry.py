@@ -21,6 +21,7 @@
 
 __all__ = ["TabTelemetry"]
 
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -28,7 +29,6 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QVBoxLayout,
 )
-from qasync import asyncSlot
 
 from lsst.ts.guitool import (
     TabTemplate,
@@ -284,8 +284,8 @@ class TabTelemetry(TabTemplate):
         signal.status.connect(self._callback_application_status)
         signal.simulink_flag.connect(self._callback_simulink_flag)
 
-    @asyncSlot()
-    async def _callback_application_status(self, status: int) -> None:
+    @Slot(int)
+    def _callback_application_status(self, status: int) -> None:
         """Callback of the application status.
 
         Parameters
@@ -332,8 +332,8 @@ class TabTelemetry(TabTemplate):
                 is_fault=(idx in faults),
             )
 
-    @asyncSlot()
-    async def _callback_simulink_flag(self, status: int) -> None:
+    @Slot(int)
+    def _callback_simulink_flag(self, status: int) -> None:
         """Callback of the Simulink flag.
 
         Parameters
@@ -370,8 +370,8 @@ class TabTelemetry(TabTemplate):
         signal.torque.connect(self._callback_torque)
         signal.time_difference.connect(self._callback_time_difference)
 
-    @asyncSlot()
-    async def _callback_rate_command(self, rates: list[float]) -> None:
+    @Slot(object)
+    def _callback_rate_command(self, rates: list[float]) -> None:
         """Callback of the commanded rates.
 
         Parameters
@@ -383,8 +383,8 @@ class TabTelemetry(TabTemplate):
         self._telemetry["rate_command_a"].setText(f"{rates[0]:.7f} deg/sec")
         self._telemetry["rate_command_b"].setText(f"{rates[1]:.7f} deg/sec")
 
-    @asyncSlot()
-    async def _callback_rate_feedback(self, rates: list[float]) -> None:
+    @Slot(object)
+    def _callback_rate_feedback(self, rates: list[float]) -> None:
         """Callback of the feedback rates.
 
         Parameters
@@ -396,8 +396,8 @@ class TabTelemetry(TabTemplate):
         self._telemetry["rate_feedback_a"].setText(f"{rates[0]:.7f} deg/sec")
         self._telemetry["rate_feedback_b"].setText(f"{rates[1]:.7f} deg/sec")
 
-    @asyncSlot()
-    async def _callback_torque(self, torques: list[float]) -> None:
+    @Slot(object)
+    def _callback_torque(self, torques: list[float]) -> None:
         """Callback of the motor torques.
 
         Parameters
@@ -409,8 +409,8 @@ class TabTelemetry(TabTemplate):
         self._telemetry["motor_torque_a"].setText(f"{torques[0]:.7f} N*m")
         self._telemetry["motor_torque_b"].setText(f"{torques[1]:.7f} N*m")
 
-    @asyncSlot()
-    async def _callback_time_difference(self, time_difference: float) -> None:
+    @Slot(float)
+    def _callback_time_difference(self, time_difference: float) -> None:
         """Callback of the time frame difference.
 
         Parameters
@@ -433,8 +433,8 @@ class TabTelemetry(TabTemplate):
         signal.position_current.connect(self._callback_position_current)
         signal.position_command.connect(self._callback_position_command)
 
-    @asyncSlot()
-    async def _callback_position_current(self, position: float) -> None:
+    @Slot(float)
+    def _callback_position_current(self, position: float) -> None:
         """Callback of the current position.
 
         Parameters
@@ -445,8 +445,8 @@ class TabTelemetry(TabTemplate):
 
         self._telemetry["position_current"].setText(f"{position:.7f} deg")
 
-    @asyncSlot()
-    async def _callback_position_command(self, position: float) -> None:
+    @Slot(float)
+    def _callback_position_command(self, position: float) -> None:
         """Callback of the commanded position.
 
         Parameters
@@ -468,8 +468,8 @@ class TabTelemetry(TabTemplate):
 
         signal.current.connect(self._callback_current)
 
-    @asyncSlot()
-    async def _callback_current(self, currents: list[float]) -> None:
+    @Slot(object)
+    def _callback_current(self, currents: list[float]) -> None:
         """Callback of the current.
 
         Parameters

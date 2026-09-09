@@ -14,7 +14,6 @@ dynamic = [ "version" ]
 dependencies = [
     "pyside6",
     "pyyaml",
-    "qasync",
     "ts_xml",
     "ts_guitool",
     "ts_tcpip",

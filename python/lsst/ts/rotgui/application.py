@@ -21,7 +21,6 @@
 
 __all__ = ["run_rotgui"]
 
-import asyncio
 
 from PySide6.QtCore import QCommandLineOption, QCommandLineParser
 
@@ -79,10 +78,9 @@ def create_parser() -> tuple[QCommandLineParser, list[QCommandLineOption]]:
     ]
 
 
-async def main(
+def main(
     parser: QCommandLineParser,
     options: list[QCommandLineOption],
-    app_close_event: asyncio.Event,
 ) -> None:
     """Main application.
 
@@ -92,8 +90,6 @@ async def main(
         Command line parser.
     options : `list` [`PySide6.QtCore.QCommandLineOption`]
         List of command line options.
-    app_close_event : `asyncio.Event`
-        Event to be set when the application is closing.
     """
 
     # Get the argument and check the values
@@ -110,5 +106,3 @@ async def main(
         log_level=log_level,
     )
     window_main.show()
-
-    await app_close_event.wait()

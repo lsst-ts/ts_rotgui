@@ -21,8 +21,8 @@
 
 __all__ = ["TabPosition"]
 
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QVBoxLayout
-from qasync import asyncSlot
 
 from lsst.ts.guitool import FigureConstant, TabTemplate
 
@@ -104,8 +104,8 @@ class TabPosition(TabTemplate):
 
         return figures
 
-    @asyncSlot()
-    async def _callback_time_out(self) -> None:
+    @Slot()
+    def _callback_time_out(self) -> None:
         """Callback timeout function to update the realtime figures."""
 
         self._figures["position"].append_data(self._position)
@@ -133,8 +133,8 @@ class TabPosition(TabTemplate):
         signal.position_current.connect(self._callback_position_current)
         signal.velocity.connect(self._callback_velocity)
 
-    @asyncSlot()
-    async def _callback_position_current(self, position: float) -> None:
+    @Slot(float)
+    def _callback_position_current(self, position: float) -> None:
         """Callback of the current position.
 
         Parameters
@@ -145,8 +145,8 @@ class TabPosition(TabTemplate):
 
         self._position = position
 
-    @asyncSlot()
-    async def _callback_velocity(self, velocity: float) -> None:
+    @Slot(float)
+    def _callback_velocity(self, velocity: float) -> None:
         """Callback of the velocity.
 
         Parameters

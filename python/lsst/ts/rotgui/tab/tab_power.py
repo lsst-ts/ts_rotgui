@@ -21,8 +21,8 @@
 
 __all__ = ["TabPower"]
 
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QVBoxLayout
-from qasync import asyncSlot
 
 from lsst.ts.guitool import FigureConstant, TabTemplate
 
@@ -114,8 +114,8 @@ class TabPower(TabTemplate):
 
         return figures
 
-    @asyncSlot()
-    async def _callback_time_out(self) -> None:
+    @Slot()
+    def _callback_time_out(self) -> None:
         """Callback timeout function to update the realtime figures."""
 
         for idx, current in enumerate(self._currents):
@@ -145,8 +145,8 @@ class TabPower(TabTemplate):
         signal.current.connect(self._callback_current)
         signal.voltage.connect(self._callback_voltage)
 
-    @asyncSlot()
-    async def _callback_current(self, currents: list[float]) -> None:
+    @Slot(object)
+    def _callback_current(self, currents: list[float]) -> None:
         """Callback of the current.
 
         Parameters
@@ -157,8 +157,8 @@ class TabPower(TabTemplate):
 
         self._currents = currents
 
-    @asyncSlot()
-    async def _callback_voltage(self, voltage: float) -> None:
+    @Slot(float)
+    def _callback_voltage(self, voltage: float) -> None:
         """Callback of the voltage.
 
         Parameters

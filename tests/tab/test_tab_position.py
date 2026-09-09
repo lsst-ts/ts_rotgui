@@ -37,12 +37,11 @@ def widget(qtbot: QtBot) -> TabPosition:
     return widget
 
 
-@pytest.mark.asyncio
-async def test_callback_time_out(widget: TabPosition) -> None:
+def test_callback_time_out(widget: TabPosition) -> None:
     widget._position = 1.0
     widget._velocity = 2.0
 
-    await widget._callback_time_out()
+    widget._callback_time_out()
 
     assert widget._figures["position"].get_points(0)[-1].y() == 1.0
     assert widget._figures["velocity"].get_points(0)[-1].y() == 2.0

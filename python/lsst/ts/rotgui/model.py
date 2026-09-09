@@ -31,7 +31,7 @@ from PySide6.QtCore import Signal
 from lsst.ts.hexrotcomm import Command, CommandTelemetryClient
 from lsst.ts.simactuators import RampGenerator
 from lsst.ts.tcpip import LOCALHOST_IPV4
-from lsst.ts.utils import current_tai, make_done_future
+from lsst.ts.utils import current_tai
 from lsst.ts.xml.enums import MTRotator
 
 from .constants import NUM_STRUT
@@ -125,7 +125,7 @@ class Model(object):
         self.client: CommandTelemetryClient | None = None
 
         # Task to track the targets.
-        self._track_task = make_done_future()
+        self._track_task: asyncio.Task | None = None
 
     def is_connected(self) -> bool:
         """Check if the client is connected.
@@ -222,7 +222,7 @@ class Model(object):
     def _stop_track_task(self) -> None:
         """Stop the track task."""
 
-        if not self._track_task.done():
+        if (self._track_task is not None) and (not self._track_task.done()):
             self._track_task.cancel()
 
     async def connect_callback(self, client: CommandTelemetryClient) -> None:
