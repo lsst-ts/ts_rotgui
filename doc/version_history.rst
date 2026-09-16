@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.5.3:
+
+-------------
+0.5.3
+-------------
+
+- Workaround the issue of the Qt and asyncio event loops in Python 3.14.
+
 .. _lsst.ts.rotgui-0.5.2:
 
 -------------

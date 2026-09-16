@@ -22,6 +22,9 @@
 __all__ = ["run_rotgui"]
 
 import asyncio
+import signal
+import sys
+import types
 
 from PySide6.QtCore import QCommandLineOption, QCommandLineParser
 
@@ -32,8 +35,27 @@ from .main_window import MainWindow
 
 def run_rotgui() -> None:
     """Run the rotator GUI."""
+    # TODO: Remove this after we adapt to the PySide6.QtAsyncio totally. At the
+    # moment, in Python 3.14, the Qt event loop kills the asyncio event loop
+    # and the SIGINT might not work if we do not catch the signal and exit the
+    # application. This is a workaround for now.
+    signal.signal(signal.SIGINT, signal_handler)
+
     parser, options = create_parser()
     base_frame_run_application("Rotator EUI", parser, options, main)
+
+
+def signal_handler(sig: int, frame: types.FrameType | None) -> None:
+    """Signal handler for SIGINT (Ctrl+C).
+
+    Parameters
+    ----------
+    sig : `int`
+        Signal.
+    frame : `frame` or None
+        Frame.
+    """
+    sys.exit()
 
 
 def create_parser() -> tuple[QCommandLineParser, list[QCommandLineOption]]:
