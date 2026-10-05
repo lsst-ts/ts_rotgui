@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.5.4:
+
+-------------
+0.5.4
+-------------
+
+* Add the ``local_scheme="no-local-version"`` to the **setup.py**.
+
 .. _lsst.ts.rotgui-0.5.3:
 
 -------------
