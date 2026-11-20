@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
 import logging
 
 import pytest
@@ -39,19 +40,22 @@ def widget(qtbot: QtBot) -> TabTarget:
 @pytest.mark.asyncio
 async def test_callback_add_target(widget: TabTarget) -> None:
     # Bad velocity and duration
-    await widget._callback_add_target(is_prompted=False)
+    widget._callback_add_target(is_prompted=False)
+    await asyncio.sleep(1)
 
     assert widget._table_target.rowCount() == 0
 
     # Bad velocity
     widget._target_parameters["duration"].setValue(1.0)
-    await widget._callback_add_target(is_prompted=False)
+    widget._callback_add_target(is_prompted=False)
+    await asyncio.sleep(1)
 
     assert widget._table_target.rowCount() == 0
 
     # Good velocity and duration
     widget._target_parameters["velocity"].setValue(1.0)
-    await widget._callback_add_target(is_prompted=False)
+    widget._callback_add_target(is_prompted=False)
+    await asyncio.sleep(1)
 
     assert widget._table_target.rowCount() == 1
 
@@ -62,20 +66,23 @@ async def test_callback_remove_target(widget: TabTarget) -> None:
     assert widget._table_target.rowCount() == 10
 
     # No selection
-    await widget._callback_remove_target()
+    widget._callback_remove_target()
+    await asyncio.sleep(1)
 
     assert widget._table_target.rowCount() == 10
 
     # Select the first to remove
     widget._table_target.selectRow(0)
-    await widget._callback_remove_target()
+    widget._callback_remove_target()
+    await asyncio.sleep(1)
 
     assert widget._table_target.rowCount() == 9
     assert widget._table_target.item(0, 0).text() == "1.0"
 
     # Select all to remove
     widget._table_target.selectAll()
-    await widget._callback_remove_target()
+    widget._callback_remove_target()
+    await asyncio.sleep(1)
 
     assert widget._table_target.rowCount() == 0
 
@@ -87,7 +94,8 @@ async def _add_targets(widget: TabTarget) -> None:
 
     for idx in range(10):
         widget._target_parameters["position"].setValue(idx)
-        await widget._callback_add_target(is_prompted=False)
+        widget._callback_add_target(is_prompted=False)
+        await asyncio.sleep(1)
 
 
 @pytest.mark.asyncio
@@ -95,7 +103,8 @@ async def test_callback_clear_targets(widget: TabTarget) -> None:
     await _add_targets(widget)
     assert widget._table_target.rowCount() == 10
 
-    await widget._callback_clear_targets()
+    widget._callback_clear_targets()
+    await asyncio.sleep(1)
 
     assert widget._table_target.rowCount() == 0
 

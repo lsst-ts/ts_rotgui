@@ -34,6 +34,9 @@ def widget(qtbot: QtBot) -> TabPosition:
     widget = TabPosition("Position", Model(logging.getLogger()))
     qtbot.addWidget(widget)
 
+    # Qt processes the pending timeouts outside the asyncio loop after a test
+    widget._timer.stop()
+
     return widget
 
 
@@ -42,7 +45,8 @@ async def test_callback_time_out(widget: TabPosition) -> None:
     widget._position = 1.0
     widget._velocity = 2.0
 
-    await widget._callback_time_out()
+    widget._callback_time_out()
+    await asyncio.sleep(1)
 
     assert widget._figures["position"].get_points(0)[-1].y() == 1.0
     assert widget._figures["velocity"].get_points(0)[-1].y() == 2.0

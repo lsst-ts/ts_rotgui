@@ -32,9 +32,15 @@ from lsst.ts.rotgui import MainWindow
 
 
 @pytest_asyncio.fixture
-def widget(qtbot: QtBot) -> MainWindow:
+async def widget(qtbot: QtBot) -> MainWindow:
     widget = MainWindow(False, False, False, log_level=13)
     qtbot.addWidget(widget)
+
+    # pytest-qt processes the pending Qt events outside the asyncio loop after
+    # each test. Stop the timer to avoid its asyncSlot callback running there.
+    for name in ["Position", "Power"]:
+        tab = widget._control_tabs.get_tab(name)[1]
+        tab._timer.stop()
 
     return widget
 

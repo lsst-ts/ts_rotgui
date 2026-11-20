@@ -34,6 +34,9 @@ def widget(qtbot: QtBot) -> TabPower:
     widget = TabPower("Power", Model(logging.getLogger()))
     qtbot.addWidget(widget)
 
+    # Qt processes the pending timeouts outside the asyncio loop after a test
+    widget._timer.stop()
+
     return widget
 
 
@@ -42,7 +45,8 @@ async def test_callback_time_out(widget: TabPower) -> None:
     widget._currents = [1.0, 2.0]
     widget._voltage = 3.0
 
-    await widget._callback_time_out()
+    widget._callback_time_out()
+    await asyncio.sleep(1)
 
     assert widget._figures["current"].get_points(0)[-1].y() == 1.0
     assert widget._figures["current"].get_points(1)[-1].y() == 2.0
