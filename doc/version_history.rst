@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.rotgui-0.5.5:
+
+-------------
+0.5.5
+-------------
+
+* Fix the unit tests from the ``qasync`` 0.29.0a1 version and remove the workaround.
+
 .. _lsst.ts.rotgui-0.5.4:
 
 -------------
